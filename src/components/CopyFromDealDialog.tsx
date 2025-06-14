@@ -91,7 +91,7 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-visible">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-visible z-50">
         <DialogHeader>
           <DialogTitle>Copy Quote from Another Deal</DialogTitle>
           <DialogDescription>
@@ -100,17 +100,21 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 py-4">
-            <DealSelector 
-              selectedDealId={selectedDealId}
-              onDealSelect={handleDealSelect}
-            />
+            <div className="relative z-40">
+              <DealSelector 
+                selectedDealId={selectedDealId}
+                onDealSelect={handleDealSelect}
+              />
+            </div>
 
-            <QuoteSelector
-              selectedDeal={selectedDeal}
-              availableQuotes={availableQuotes}
-              selectedQuoteId={selectedQuoteId}
-              onQuoteSelect={setSelectedQuoteId}
-            />
+            <div className="relative z-30">
+              <QuoteSelector
+                selectedDeal={selectedDeal}
+                availableQuotes={availableQuotes}
+                selectedQuoteId={selectedQuoteId}
+                onQuoteSelect={setSelectedQuoteId}
+              />
+            </div>
 
             {selectedQuote && (
               <div className="space-y-3">

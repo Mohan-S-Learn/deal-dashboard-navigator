@@ -27,15 +27,19 @@ const getStatusColor = (status: string) => {
 
 const DealSelector: React.FC<DealSelectorProps> = ({ selectedDealId, onDealSelect }) => {
   return (
-    <div className="space-y-3 relative z-50">
+    <div className="space-y-3">
       <Label className="text-base font-semibold">Select Deal</Label>
       <Select value={selectedDealId} onValueChange={onDealSelect}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choose a deal from My Deals..." />
         </SelectTrigger>
-        <SelectContent className="max-h-[300px] z-[9999] bg-white">
+        <SelectContent className="max-h-[300px] z-[50] bg-white border border-gray-200 shadow-lg">
           {mockDeals.map((deal) => (
-            <SelectItem key={deal.id} value={deal.id}>
+            <SelectItem 
+              key={deal.id} 
+              value={deal.id}
+              className="hover:bg-gray-100 focus:bg-gray-100"
+            >
               <div className="w-full py-2">
                 <div className="font-semibold text-gray-900 mb-1">{deal.name}</div>
                 <div className="text-sm text-gray-600 mb-2">Owner: {deal.dealOwner}</div>
