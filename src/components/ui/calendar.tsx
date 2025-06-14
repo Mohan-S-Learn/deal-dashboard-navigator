@@ -5,7 +5,6 @@ import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -62,24 +61,23 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
         Dropdown: ({ value, onChange, children, ...props }) => {
-          const handleValueChange = (newValue: string) => {
-            if (onChange) {
-              const numValue = parseInt(newValue, 10);
-              onChange({
-                target: { value: numValue }
-              } as any);
-            }
-          };
-
+          const options = React.Children.toArray(children);
+          
           return (
-            <Select value={value?.toString()} onValueChange={handleValueChange}>
-              <SelectTrigger className="h-7 w-fit border-0 p-1 focus:ring-0 focus:ring-offset-0 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" className="bg-white border shadow-md z-50">
-                {children}
-              </SelectContent>
-            </Select>
+            <select
+              value={value}
+              onChange={(e) => {
+                if (onChange) {
+                  onChange({
+                    target: { value: parseInt(e.target.value, 10) }
+                  } as any);
+                }
+              }}
+              className="text-sm font-medium bg-transparent border-0 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded px-2 py-1"
+              {...props}
+            >
+              {options}
+            </select>
           );
         },
       }}
