@@ -42,9 +42,25 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Helper function to generate unique Quote ID
-const generateUniqueQuoteId = (dealId: string) => {
-  return `QT-${dealId}-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+// Helper function to generate unique Quote ID with simple format
+const generateUniqueQuoteId = async (dealId: string, existingQuotes: any[] = []) => {
+  // Get all existing Quote_IDs for this deal from both database and current quotes
+  const existingIds = existingQuotes
+    .filter(q => q.Quote_ID && q.Quote_ID.startsWith(`${dealId}-QT-`))
+    .map(q => q.Quote_ID);
+
+  // Extract the numeric parts and find the highest number
+  const numbers = existingIds
+    .map(id => {
+      const match = id.match(/QT-(\d+)$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(num => !isNaN(num));
+
+  const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
+  const nextNumber = maxNumber + 1;
+  
+  return `${dealId}-QT-${nextNumber.toString().padStart(3, '0')}`;
 };
 
 const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
@@ -92,7 +108,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
         // If Quote_ID is null or empty, generate a new one
         if (!quoteId) {
-          quoteId = generateUniqueQuoteId(dealId);
+          quoteId = await generateUniqueQuoteId(dealId, data);
           quotesToUpdate.push({
             Deal_Id: quote.Deal_Id,
             Quote_Name: quote.Quote_Name,
@@ -149,8 +165,8 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
     try {
       console.log('Saving quote to database:', quote);
       
-      // Generate a unique Quote_ID - this should always be set now
-      const uniqueQuoteId = quote.quoteId || generateUniqueQuoteId(dealId);
+      // Generate a unique Quote_ID using the simple format
+      const uniqueQuoteId = quote.quoteId || await generateUniqueQuoteId(dealId, quoteVersions);
       
       // Generate a unique quote name if it already exists
       const existingQuotes = await supabase
@@ -215,7 +231,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
   };
 
   const handleCreateNewQuote = async (quoteName: string) => {
-    const newQuoteId = generateUniqueQuoteId(dealId);
+    const newQuoteId = await generateUniqueQuoteId(dealId, quoteVersions);
     
     const newQuote = {
       quoteId: newQuoteId,
@@ -252,7 +268,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       return;
     }
 
-    const newQuoteId = generateUniqueQuoteId(dealId);
+    const newQuoteId = await generateUniqueQuoteId(dealId, quoteVersions);
 
     const newQuote = {
       quoteId: newQuoteId,
@@ -298,7 +314,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         return;
       }
 
-      const newQuoteId = generateUniqueQuoteId(dealId);
+      const newQuoteId = await generateUniqueQuoteId(dealId, quoteVersions);
 
       const newQuote = {
         quoteId: newQuoteId,
