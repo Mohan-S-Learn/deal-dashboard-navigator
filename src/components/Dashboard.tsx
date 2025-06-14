@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, TrendingUp, DollarSign, Users, ArrowRight } from 'lucide-react';
+import { Building2, TrendingUp, DollarSign, Users, ArrowRight, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { syncDealsToDatabase } from '../services/dataSync';
 
@@ -91,6 +90,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
     }
   };
 
+  const handleScenarioBuilderClick = () => {
+    if (deals.length > 0) {
+      onDealClick(deals[0].id); // Navigate to scenario builder with first deal
+    }
+  };
+
   const totalRevenue = deals.reduce((sum, deal) => sum + deal.totalRevenue, 0);
   const activeDeals = deals.filter(deal => deal.status === 'Active').length;
   const avgMargin = deals.length > 0 ? deals.reduce((sum, deal) => sum + deal.marginPercent, 0) / deals.length : 0;
@@ -113,7 +118,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Deals Dashboard</h1>
+              <div className="flex items-center space-x-4">
+                <h1 className="text-3xl font-bold text-gray-900">My Deals Dashboard</h1>
+                <Button
+                  onClick={handleScenarioBuilderClick}
+                  variant="outline"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={deals.length === 0}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Scenario Builder
+                </Button>
+              </div>
               <p className="text-gray-600 font-medium mt-2">Manage and track your IT services deals</p>
             </div>
             <div className="text-right">
