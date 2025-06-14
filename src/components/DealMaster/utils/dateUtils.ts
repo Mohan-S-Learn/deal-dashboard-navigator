@@ -42,15 +42,22 @@ export const calculateDuration = (startDate: Date | null, endDate: Date | null):
   // Calculate the difference in months more accurately
   let years = end.getFullYear() - start.getFullYear();
   let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
   
   // Total months calculation
   let totalMonths = years * 12 + months;
   
-  // Adjust for partial months based on day of month
-  if (end.getDate() < start.getDate()) {
+  // If we're not at the end of the month, but the start day is greater than end day,
+  // we haven't completed a full month yet
+  if (days < 0) {
     totalMonths--;
   }
   
-  // Ensure we have at least 1 month if there's any time difference
-  return Math.max(totalMonths, 1);
+  // If dates are exactly the same, count as 1 month minimum
+  if (totalMonths === 0 && (start.getTime() !== end.getTime())) {
+    totalMonths = 1;
+  }
+  
+  // Round to nearest month and ensure minimum of 1
+  return Math.max(Math.round(totalMonths), 1);
 };

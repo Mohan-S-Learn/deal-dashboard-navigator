@@ -33,6 +33,10 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     loadQuoteData
   } = useDealMasterData(dealId, quoteName);
 
+  // Add state for table data
+  const [geographyRows, setGeographyRows] = React.useState<any[]>([]);
+  const [categoryRows, setCategoryRows] = React.useState<any[]>([]);
+
   const { saveData } = useDealMasterSave();
 
   useEffect(() => {
@@ -115,13 +119,33 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   };
 
   const handleSaveData = () => {
+    // Convert geography rows to selected geography IDs
+    const geographyIds = geographyRows
+      .filter(row => row.region && row.country && row.city)
+      .map(row => {
+        const geography = geographies.find(g => 
+          g.region === row.region && 
+          g.country === row.country && 
+          g.city === row.city
+        );
+        return geography?.id;
+      })
+      .filter(id => id !== undefined);
+
+    // Convert category rows to selected categories
+    const categoryData = categoryRows.length > 0 && categoryRows[0].level1 ? {
+      level1: categoryRows[0].level1,
+      level2: categoryRows[0].level2,
+      level3: categoryRows[0].level3,
+    } : selectedCategories;
+
     saveData(
       dealId,
       quoteName,
       quoteData,
       selectedResourceTypes,
-      selectedGeographies,
-      selectedCategories,
+      geographyIds,
+      categoryData,
       volumeDiscounts
     );
   };

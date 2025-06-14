@@ -48,7 +48,8 @@ export const useDealMasterSave = () => {
           Quote_Name: quoteName,
           resource_type_id: rtId
         }));
-        await supabase.from('QuoteResourceType').insert(resourceTypeInserts);
+        const { error: rtError } = await supabase.from('QuoteResourceType').insert(resourceTypeInserts);
+        if (rtError) throw rtError;
       }
 
       // Save geographies
@@ -59,19 +60,21 @@ export const useDealMasterSave = () => {
           Quote_Name: quoteName,
           geography_id: gId
         }));
-        await supabase.from('QuoteGeography').insert(geographyInserts);
+        const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
+        if (geoError) throw geoError;
       }
 
       // Save service categories
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (selectedCategories.level1 || selectedCategories.level2 || selectedCategories.level3) {
-        await supabase.from('QuoteServiceCategory').insert({
+        const { error: catError } = await supabase.from('QuoteServiceCategory').insert({
           Deal_Id: dealId,
           Quote_Name: quoteName,
           category_level_1_id: selectedCategories.level1,
           category_level_2_id: selectedCategories.level2,
           category_level_3_id: selectedCategories.level3,
         });
+        if (catError) throw catError;
       }
 
       // Save volume discounts
@@ -84,7 +87,8 @@ export const useDealMasterSave = () => {
           range_end: vd.range_end,
           discount_percent: vd.discount_percent
         }));
-        await supabase.from('VolumeDiscount').insert(volumeInserts);
+        const { error: volError } = await supabase.from('VolumeDiscount').insert(volumeInserts);
+        if (volError) throw volError;
       }
 
       toast({

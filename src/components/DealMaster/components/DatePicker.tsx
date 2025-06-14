@@ -15,6 +15,7 @@ interface DatePickerProps {
 
 export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeholder }) => {
   const [inputValue, setInputValue] = React.useState(formatDate(value));
+  const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
     setInputValue(formatDate(value));
@@ -35,10 +36,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeho
   const handleCalendarSelect = (date: Date | undefined) => {
     onChange(date);
     setInputValue(formatDate(date || null));
+    setIsOpen(false);
   };
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <div className="relative">
           <Input
@@ -52,6 +54,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeho
             size="sm"
             className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
             type="button"
+            onClick={() => setIsOpen(!isOpen)}
           >
             <CalendarIcon className="h-4 w-4" />
           </Button>
@@ -63,6 +66,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeho
           selected={value || undefined} 
           onSelect={handleCalendarSelect} 
           initialFocus 
+          defaultMonth={value || new Date()}
         />
       </PopoverContent>
     </Popover>
