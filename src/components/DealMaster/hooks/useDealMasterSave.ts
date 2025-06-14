@@ -16,28 +16,49 @@ export const useDealMasterSave = () => {
     volumeDiscounts: VolumeDiscountRange[]
   ) => {
     try {
-      console.log('Saving quote data:', quoteData);
+      console.log('=== SAVE OPERATION START ===');
+      console.log('Deal ID:', dealId);
+      console.log('Quote Name:', quoteName);
+      console.log('Quote data to save:', quoteData);
       
-      // Format dates properly - ensure they're valid dates before converting
+      // Enhanced date formatting with better validation
       const formatDate = (date: Date | null) => {
+        console.log('Formatting date:', date, 'Type:', typeof date);
+        
         if (!date) {
           console.log('Date is null or undefined');
           return null;
         }
         
+        // Handle string dates that might come from inputs
+        if (typeof date === 'string') {
+          console.log('Date is string, converting to Date object');
+          const parsedDate = new Date(date);
+          if (isNaN(parsedDate.getTime())) {
+            console.log('String date is invalid:', date);
+            return null;
+          }
+          date = parsedDate;
+        }
+        
         // Check if it's a valid Date object
         if (!(date instanceof Date)) {
-          console.log('Date is not a Date object:', date);
+          console.log('Date is not a Date object:', date, 'Type:', typeof date);
           return null;
         }
         
         if (isNaN(date.getTime())) {
-          console.log('Date is invalid:', date);
+          console.log('Date object is invalid:', date);
           return null;
         }
         
-        const formatted = date.toISOString().split('T')[0];
-        console.log('Formatted date:', date, '->', formatted);
+        // Format to YYYY-MM-DD for database
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const formatted = `${year}-${month}-${day}`;
+        
+        console.log('Successfully formatted date:', date, '->', formatted);
         return formatted;
       };
 
@@ -58,9 +79,10 @@ export const useDealMasterSave = () => {
         licenses_percent: quoteData.licenses_percent,
       };
 
-      console.log('Formatted quote data for saving:', formattedQuoteData);
+      console.log('Formatted quote data for database:', formattedQuoteData);
 
       // Update quote data
+      console.log('Updating quote data...');
       const { error: quoteError } = await supabase
         .from('Quotes')
         .update(formattedQuoteData)
@@ -71,10 +93,10 @@ export const useDealMasterSave = () => {
         console.error('Quote update error:', quoteError);
         throw quoteError;
       }
-
       console.log('Quote data updated successfully');
 
       // Save resource types
+      console.log('Saving resource types:', selectedResourceTypes);
       await supabase.from('QuoteResourceType').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (selectedResourceTypes.length > 0) {
         const resourceTypeInserts = selectedResourceTypes.map(rtId => ({
@@ -82,15 +104,17 @@ export const useDealMasterSave = () => {
           Quote_Name: quoteName,
           resource_type_id: rtId
         }));
-        console.log('Saving resource types:', resourceTypeInserts);
+        console.log('Inserting resource types:', resourceTypeInserts);
         const { error: rtError } = await supabase.from('QuoteResourceType').insert(resourceTypeInserts);
         if (rtError) {
           console.error('Resource type insert error:', rtError);
           throw rtError;
         }
+        console.log('Resource types saved successfully');
       }
 
-      // Save geographies
+      // Save geographies with enhanced logging
+      console.log('Saving geographies:', selectedGeographies);
       await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (selectedGeographies.length > 0) {
         const geographyInserts = selectedGeographies.map(gId => ({
@@ -98,15 +122,19 @@ export const useDealMasterSave = () => {
           Quote_Name: quoteName,
           geography_id: gId
         }));
-        console.log('Saving geographies:', geographyInserts);
+        console.log('Inserting geographies:', geographyInserts);
         const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
         if (geoError) {
           console.error('Geography insert error:', geoError);
           throw geoError;
         }
+        console.log('Geographies saved successfully');
+      } else {
+        console.log('No geographies to save');
       }
 
-      // Save service categories
+      // Save service categories with enhanced logging
+      console.log('Saving service categories:', selectedCategories);
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (selectedCategories.level1 || selectedCategories.level2 || selectedCategories.level3) {
         const categoryInsert = {
@@ -116,15 +144,19 @@ export const useDealMasterSave = () => {
           category_level_2_id: selectedCategories.level2,
           category_level_3_id: selectedCategories.level3,
         };
-        console.log('Saving service categories:', categoryInsert);
+        console.log('Inserting service category:', categoryInsert);
         const { error: catError } = await supabase.from('QuoteServiceCategory').insert(categoryInsert);
         if (catError) {
           console.error('Category insert error:', catError);
           throw catError;
         }
+        console.log('Service categories saved successfully');
+      } else {
+        console.log('No categories to save');
       }
 
       // Save volume discounts
+      console.log('Saving volume discounts:', volumeDiscounts);
       await supabase.from('VolumeDiscount').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (volumeDiscounts.length > 0) {
         const volumeInserts = volumeDiscounts.map(vd => ({
@@ -134,21 +166,24 @@ export const useDealMasterSave = () => {
           range_end: vd.range_end,
           discount_percent: vd.discount_percent
         }));
-        console.log('Saving volume discounts:', volumeInserts);
+        console.log('Inserting volume discounts:', volumeInserts);
         const { error: volError } = await supabase.from('VolumeDiscount').insert(volumeInserts);
         if (volError) {
           console.error('Volume discount insert error:', volError);
           throw volError;
         }
+        console.log('Volume discounts saved successfully');
       }
 
+      console.log('=== SAVE OPERATION COMPLETED SUCCESSFULLY ===');
       toast({
         title: "Success",
         description: "Deal master data saved successfully",
       });
 
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.error('=== SAVE OPERATION FAILED ===');
+      console.error('Error details:', error);
       toast({
         title: "Error",
         description: "Failed to save deal master data",
