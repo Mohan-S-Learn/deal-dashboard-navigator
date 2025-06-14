@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 interface CopyFromDealDialogProps {
   open: boolean;
@@ -18,29 +19,90 @@ interface CopyFromDealDialogProps {
   onCopyFromDeal: (dealId: string, quoteId: string, newQuoteName: string) => void;
 }
 
-// Mock data for deals - this would come from your data source
+// Expanded mock data for deals from "My Deals" page
 const mockDeals = [
-  { id: 'DEAL001', name: 'ABC Corp Infrastructure', quoteCount: 3 },
-  { id: 'DEAL002', name: 'XYZ Ltd Migration', quoteCount: 2 },
-  { id: 'DEAL003', name: 'TechStart Security', quoteCount: 4 }
+  { 
+    id: 'DEAL001', 
+    name: 'ABC Corp Infrastructure Upgrade', 
+    client: 'ABC Corporation',
+    value: 450000,
+    status: 'Active',
+    quoteCount: 3 
+  },
+  { 
+    id: 'DEAL002', 
+    name: 'XYZ Ltd Cloud Migration', 
+    client: 'XYZ Limited',
+    value: 280000,
+    status: 'Proposal',
+    quoteCount: 2 
+  },
+  { 
+    id: 'DEAL003', 
+    name: 'TechStart Security Implementation', 
+    client: 'TechStart Inc',
+    value: 650000,
+    status: 'Active',
+    quoteCount: 4 
+  },
+  { 
+    id: 'DEAL004', 
+    name: 'Global Corp Digital Transformation', 
+    client: 'Global Corp',
+    value: 1200000,
+    status: 'Negotiation',
+    quoteCount: 5 
+  },
+  { 
+    id: 'DEAL005', 
+    name: 'StartupX Platform Development', 
+    client: 'StartupX',
+    value: 85000,
+    status: 'Proposal',
+    quoteCount: 2 
+  },
+  { 
+    id: 'DEAL006', 
+    name: 'Enterprise Solutions Modernization', 
+    client: 'Enterprise Solutions Ltd',
+    value: 750000,
+    status: 'Active',
+    quoteCount: 3 
+  }
 ];
 
-// Mock quotes for selected deal - this would be fetched based on selected deal
+// Expanded mock quotes for selected deal
 const mockQuotesForDeal = {
   'DEAL001': [
-    { id: 'Q001', name: 'Basic Package', revenue: 150000 },
-    { id: 'Q002', name: 'Enhanced Package', revenue: 200000 },
-    { id: 'Q003', name: 'Premium Package', revenue: 300000 }
+    { id: 'Q001', name: 'Basic Infrastructure Package', revenue: 150000, margin: 18 },
+    { id: 'Q002', name: 'Enhanced Infrastructure with Support', revenue: 200000, margin: 22 },
+    { id: 'Q003', name: 'Premium Infrastructure Solution', revenue: 300000, margin: 25 }
   ],
   'DEAL002': [
-    { id: 'Q004', name: 'Migration Phase 1', revenue: 120000 },
-    { id: 'Q005', name: 'Migration Complete', revenue: 250000 }
+    { id: 'Q004', name: 'Phase 1 - Assessment & Planning', revenue: 120000, margin: 20 },
+    { id: 'Q005', name: 'Complete Migration Package', revenue: 250000, margin: 24 }
   ],
   'DEAL003': [
-    { id: 'Q006', name: 'Security Essentials', revenue: 80000 },
-    { id: 'Q007', name: 'Advanced Security', revenue: 140000 },
-    { id: 'Q008', name: 'Enterprise Security', revenue: 220000 },
-    { id: 'Q009', name: 'Complete Solution', revenue: 350000 }
+    { id: 'Q006', name: 'Security Essentials', revenue: 180000, margin: 19 },
+    { id: 'Q007', name: 'Advanced Security Suite', revenue: 340000, margin: 23 },
+    { id: 'Q008', name: 'Enterprise Security Platform', revenue: 520000, margin: 27 },
+    { id: 'Q009', name: 'Complete Security Solution', revenue: 650000, margin: 29 }
+  ],
+  'DEAL004': [
+    { id: 'Q010', name: 'Foundation Package', revenue: 400000, margin: 20 },
+    { id: 'Q011', name: 'Standard Transformation', revenue: 700000, margin: 24 },
+    { id: 'Q012', name: 'Advanced Digital Suite', revenue: 950000, margin: 26 },
+    { id: 'Q013', name: 'Premium Transformation', revenue: 1200000, margin: 28 },
+    { id: 'Q014', name: 'Enterprise Plus Package', revenue: 1450000, margin: 30 }
+  ],
+  'DEAL005': [
+    { id: 'Q015', name: 'MVP Development', revenue: 60000, margin: 15 },
+    { id: 'Q016', name: 'Full Platform Development', revenue: 85000, margin: 18 }
+  ],
+  'DEAL006': [
+    { id: 'Q017', name: 'Modernization Phase 1', revenue: 250000, margin: 21 },
+    { id: 'Q018', name: 'Complete Modernization', revenue: 500000, margin: 25 },
+    { id: 'Q019', name: 'Premium Modernization Suite', revenue: 750000, margin: 28 }
   ]
 };
 
@@ -51,6 +113,15 @@ const formatCurrency = (amount: number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    case 'Proposal': return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'Negotiation': return 'bg-amber-100 text-amber-700 border-amber-200';
+    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
 };
 
 const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
@@ -84,41 +155,54 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Copy Quote from Another Deal</DialogTitle>
           <DialogDescription>
-            Select a deal and then choose a quote scenario from that deal to copy.
+            Select a deal from your "My Deals" and choose a quote scenario to copy.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
             {/* Deal Selection */}
-            <div className="space-y-2">
-              <Label>Select Deal</Label>
-              <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Select Deal from My Deals</Label>
+              <div className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-3 bg-gray-50">
                 {mockDeals.map((deal) => (
                   <div
                     key={deal.id}
-                    className={`p-3 rounded-md cursor-pointer border transition-colors ${
+                    className={`p-4 rounded-lg cursor-pointer border-2 transition-all duration-200 ${
                       selectedDealId === deal.id 
-                        ? 'bg-blue-50 border-blue-200' 
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                        ? 'bg-blue-50 border-blue-300 shadow-md' 
+                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                     }`}
                     onClick={() => handleDealSelect(deal.id)}
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                       <input
                         type="radio"
                         name="selectedDeal"
                         value={deal.id}
                         checked={selectedDealId === deal.id}
                         onChange={() => handleDealSelect(deal.id)}
-                        className="h-4 w-4"
+                        className="h-4 w-4 text-blue-600"
                       />
-                      <div>
-                        <div className="font-medium">{deal.name}</div>
-                        <div className="text-sm text-gray-500">{deal.quoteCount} quote scenarios</div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-gray-900">{deal.name}</div>
+                            <div className="text-sm text-gray-600">{deal.client}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-green-700">{formatCurrency(deal.value)}</div>
+                            <Badge className={`${getStatusColor(deal.status)} text-xs`}>
+                              {deal.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {deal.quoteCount} quote scenario{deal.quoteCount !== 1 ? 's' : ''} • {deal.id}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -128,31 +212,36 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
             {/* Quote Selection */}
             {selectedDeal && availableQuotes.length > 0 && (
-              <div className="space-y-2">
-                <Label>Select Quote from {selectedDeal.name}</Label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Select Quote from {selectedDeal.name}</Label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-gray-50">
                   {availableQuotes.map((quote) => (
                     <div
                       key={quote.id}
-                      className={`p-3 rounded-md cursor-pointer border transition-colors ${
+                      className={`p-3 rounded-lg cursor-pointer border-2 transition-all duration-200 ${
                         selectedQuoteId === quote.id 
-                          ? 'bg-blue-50 border-blue-200' 
-                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          ? 'bg-blue-50 border-blue-300 shadow-md' 
+                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedQuoteId(quote.id)}
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <input
                           type="radio"
                           name="selectedQuote"
                           value={quote.id}
                           checked={selectedQuoteId === quote.id}
                           onChange={() => setSelectedQuoteId(quote.id)}
-                          className="h-4 w-4"
+                          className="h-4 w-4 text-blue-600"
                         />
                         <div className="flex-1">
-                          <div className="font-medium">{quote.name}</div>
-                          <div className="text-sm text-gray-500">{formatCurrency(quote.revenue)}</div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-gray-900">{quote.name}</div>
+                            <div className="text-right">
+                              <div className="font-bold text-green-700">{formatCurrency(quote.revenue)}</div>
+                              <div className="text-xs text-indigo-600 font-medium">{quote.margin}% margin</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -163,16 +252,16 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
             {/* New Quote Name */}
             {selectedQuote && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="newQuoteNameFromDeal" className="text-right">
-                  New Name
+              <div className="space-y-2">
+                <Label htmlFor="newQuoteNameFromDeal" className="text-base font-semibold">
+                  New Quote Name
                 </Label>
                 <Input
                   id="newQuoteNameFromDeal"
                   value={newQuoteName}
                   onChange={(e) => setNewQuoteName(e.target.value)}
-                  className="col-span-3"
                   placeholder={`Copy of ${selectedQuote.name}`}
+                  className="w-full"
                 />
               </div>
             )}
