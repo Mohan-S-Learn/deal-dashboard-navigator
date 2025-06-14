@@ -33,6 +33,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   totalRevenue, 
   onScenarioBuilderClick 
 }) => {
+  const handleScenarioBuilderClick = () => {
+    if (deals.length > 0) {
+      onScenarioBuilderClick();
+    }
+  };
+
   return (
     <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
@@ -41,7 +47,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             <div className="flex items-center space-x-4">
               <h1 className="text-3xl font-bold text-gray-900">My Deals Dashboard</h1>
               <Button
-                onClick={onScenarioBuilderClick}
+                onClick={handleScenarioBuilderClick}
                 variant="outline"
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={deals.length === 0}
