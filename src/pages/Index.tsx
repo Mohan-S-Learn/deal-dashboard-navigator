@@ -4,6 +4,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import Login from '../components/Login';
 import Dashboard from '../components/Dashboard';
 import VersionManagement from '../components/VersionManagement';
+import DealMaster from '../components/DealMaster';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -15,11 +16,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
 
-type View = 'login' | 'dashboard' | 'version-management';
+type View = 'login' | 'dashboard' | 'version-management' | 'deal-master';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<View>('login');
   const [selectedDealId, setSelectedDealId] = useState<string>('');
+  const [selectedQuoteName, setSelectedQuoteName] = useState<string>('');
 
   const handleLogin = () => {
     setCurrentView('dashboard');
@@ -30,9 +32,21 @@ const Index = () => {
     setCurrentView('version-management');
   };
 
+  const handleQuoteClick = (dealId: string, quoteName: string) => {
+    setSelectedDealId(dealId);
+    setSelectedQuoteName(quoteName);
+    setCurrentView('deal-master');
+  };
+
   const handleBackToDashboard = () => {
     setCurrentView('dashboard');
     setSelectedDealId('');
+    setSelectedQuoteName('');
+  };
+
+  const handleBackToVersionManagement = () => {
+    setCurrentView('version-management');
+    setSelectedQuoteName('');
   };
 
   const renderNavigation = () => {
@@ -74,6 +88,7 @@ const Index = () => {
                     <NavigationMenuItem>
                       <Button
                         variant={currentView === 'version-management' ? 'default' : 'ghost'}
+                        onClick={handleBackToVersionManagement}
                         className={`font-semibold transition-all duration-200 ${
                           currentView === 'version-management'
                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
@@ -81,6 +96,20 @@ const Index = () => {
                         }`}
                       >
                         Scenario Builder
+                      </Button>
+                    </NavigationMenuItem>
+                  )}
+                  {selectedQuoteName && (
+                    <NavigationMenuItem>
+                      <Button
+                        variant={currentView === 'deal-master' ? 'default' : 'ghost'}
+                        className={`font-semibold transition-all duration-200 ${
+                          currentView === 'deal-master'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
+                            : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        Deal Master
                       </Button>
                     </NavigationMenuItem>
                   )}
@@ -100,7 +129,9 @@ const Index = () => {
       case 'dashboard':
         return <Dashboard onDealClick={handleDealClick} />;
       case 'version-management':
-        return <VersionManagement dealId={selectedDealId} onBack={handleBackToDashboard} />;
+        return <VersionManagement dealId={selectedDealId} onBack={handleBackToDashboard} onQuoteClick={handleQuoteClick} />;
+      case 'deal-master':
+        return <DealMaster dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToVersionManagement} />;
       default:
         return <Login onLogin={handleLogin} />;
     }

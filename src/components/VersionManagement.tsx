@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +12,7 @@ import { generateUniqueQuoteId } from '../utils/quoteUtils';
 interface VersionManagementProps {
   dealId: string;
   onBack: () => void;
+  onQuoteClick?: (dealId: string, quoteName: string) => void;
 }
 
 interface QuoteVersion {
@@ -26,7 +26,7 @@ interface QuoteVersion {
   status: 'Draft' | 'Active' | 'Archived';
 }
 
-const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
+const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack, onQuoteClick }) => {
   const [quoteVersions, setQuoteVersions] = useState<QuoteVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [createNewDialogOpen, setCreateNewDialogOpen] = useState(false);
@@ -340,12 +340,16 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
           <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-t-lg border-b border-gray-100">
             <CardTitle className="text-2xl font-bold text-gray-900">Quote Scenarios</CardTitle>
             <CardDescription className="text-gray-600 text-base">
-              Manage and compare different pricing scenarios for this deal
+              Manage and compare different pricing scenarios for this deal. Click on Quote ID to configure details.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-hidden">
-              <QuoteTable quoteVersions={quoteVersions} />
+              <QuoteTable 
+                quoteVersions={quoteVersions} 
+                onQuoteClick={onQuoteClick}
+                dealId={dealId}
+              />
             </div>
           </CardContent>
         </Card>

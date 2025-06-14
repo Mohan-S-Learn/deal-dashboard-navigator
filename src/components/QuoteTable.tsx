@@ -9,6 +9,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface QuoteVersion {
   id: string;
@@ -23,6 +24,8 @@ interface QuoteVersion {
 
 interface QuoteTableProps {
   quoteVersions: QuoteVersion[];
+  onQuoteClick?: (dealId: string, quoteName: string) => void;
+  dealId?: string;
 }
 
 const formatCurrency = (amount: number) => {
@@ -43,7 +46,7 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const QuoteTable: React.FC<QuoteTableProps> = ({ quoteVersions }) => {
+const QuoteTable: React.FC<QuoteTableProps> = ({ quoteVersions, onQuoteClick, dealId }) => {
   if (quoteVersions.length === 0) {
     return (
       <div className="p-8 text-center">
@@ -52,6 +55,12 @@ const QuoteTable: React.FC<QuoteTableProps> = ({ quoteVersions }) => {
       </div>
     );
   }
+
+  const handleQuoteIdClick = (quoteName: string) => {
+    if (onQuoteClick && dealId) {
+      onQuoteClick(dealId, quoteName);
+    }
+  };
 
   return (
     <Table>
@@ -70,9 +79,19 @@ const QuoteTable: React.FC<QuoteTableProps> = ({ quoteVersions }) => {
         {quoteVersions.map((quote, index) => (
           <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
             <TableCell className="py-4">
-              <div className="font-mono text-sm text-gray-600 font-semibold">
-                {quote.quoteId || 'N/A'}
-              </div>
+              {onQuoteClick ? (
+                <Button
+                  variant="link"
+                  className="font-mono text-sm text-blue-600 font-semibold p-0 h-auto hover:text-blue-800 underline"
+                  onClick={() => handleQuoteIdClick(quote.quoteName)}
+                >
+                  {quote.quoteId || 'N/A'}
+                </Button>
+              ) : (
+                <div className="font-mono text-sm text-gray-600 font-semibold">
+                  {quote.quoteId || 'N/A'}
+                </div>
+              )}
             </TableCell>
             <TableCell className="py-4">
               <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
