@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { mockDeals } from '../data/mockData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,257 +11,216 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { FileText, DollarSign, User, Plus, Copy, FileSearch } from 'lucide-react';
+import { ArrowLeft, Plus, Copy, FileSearch, Sparkles, Target } from 'lucide-react';
 
 interface VersionManagementProps {
   dealId: string;
   onBack: () => void;
 }
 
-const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
-  const deal = mockDeals.find(d => d.id === dealId);
+interface QuoteVersion {
+  id: string;
+  quoteName: string;
+  createdDate: string;
+  createdBy: string;
+  revenue: number;
+  marginPercent: number;
+  status: 'Draft' | 'Active' | 'Archived';
+}
 
-  if (!deal) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-center text-gray-500">Deal not found</p>
-            <Button onClick={onBack} className="mt-4 w-full">
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+const mockQuoteVersions: QuoteVersion[] = [
+  {
+    id: 'QV001',
+    quoteName: 'Standard Infrastructure Package',
+    createdDate: '2024-01-15',
+    createdBy: 'John Smith',
+    revenue: 250000,
+    marginPercent: 22,
+    status: 'Active'
+  },
+  {
+    id: 'QV002',
+    quoteName: 'Enhanced Security Bundle',
+    createdDate: '2024-01-10',
+    createdBy: 'Sarah Wilson',
+    revenue: 180000,
+    marginPercent: 18,
+    status: 'Draft'
+  },
+  {
+    id: 'QV003',
+    quoteName: 'Cloud Migration Phase 1',
+    createdDate: '2024-01-05',
+    createdBy: 'Mike Johnson',
+    revenue: 320000,
+    marginPercent: 25,
+    status: 'Archived'
   }
+];
 
-  // Mock quote versions data
-  const quoteVersions = [
-    {
-      id: 'QT-001-v1.0',
-      quoteName: 'Initial Cloud Migration Quote',
-      createdDate: deal.createdDate,
-      createdBy: deal.dealOwner,
-      revenue: deal.totalRevenue * 0.8,
-      marginPercent: deal.marginPercent - 5,
-      status: 'Draft'
-    },
-    {
-      id: 'QT-001-v1.1',
-      quoteName: 'Revised Cloud Migration Quote',
-      createdDate: new Date(new Date(deal.createdDate).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      createdBy: deal.dealOwner,
-      revenue: deal.totalRevenue * 0.9,
-      marginPercent: deal.marginPercent - 2,
-      status: 'Review'
-    },
-    {
-      id: 'QT-001-v2.0',
-      quoteName: 'Final Cloud Migration Quote',
-      createdDate: new Date(new Date(deal.createdDate).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      createdBy: deal.dealOwner,
-      revenue: deal.totalRevenue,
-      marginPercent: deal.marginPercent,
-      status: 'Current'
-    }
-  ];
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
+  const [quoteVersions] = useState<QuoteVersion[]>(mockQuoteVersions);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Current': return 'bg-green-100 text-green-800';
-      case 'Review': return 'bg-yellow-100 text-yellow-800';
-      case 'Draft': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'Draft': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'Archived': return 'bg-gray-100 text-gray-700 border-gray-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const handleCreateNewQuote = () => {
-    console.log('Creating new quote from beginning');
-    // TODO: Implement new quote creation
-  };
-
-  const handleCopyFromExisting = () => {
-    console.log('Copying from existing quote in same deal');
-    // TODO: Implement copy from existing quote
-  };
-
-  const handleCopyFromOtherDeal = () => {
-    console.log('Copying from another deal');
-    // TODO: Implement copy from other deal
-  };
+  const totalRevenue = quoteVersions.reduce((sum, quote) => sum + quote.revenue, 0);
+  const averageMargin = quoteVersions.reduce((sum, quote) => sum + quote.marginPercent, 0) / quoteVersions.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Deal Info Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{deal.name}</h2>
-              <p className="text-sm text-gray-500">Deal ID: {deal.id}</p>
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={onBack}
+                className="flex items-center space-x-2 hover:bg-gray-50 border-gray-200"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Deals</span>
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Scenario Builder</h1>
+                <p className="text-gray-500 font-medium">Deal ID: {dealId}</p>
+              </div>
             </div>
-            <Badge className={getStatusColor(deal.status)}>
-              {deal.status}
-            </Badge>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Deal Summary Cards */}
+      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-indigo-700">Total Scenarios</CardTitle>
+              <Target className="h-5 w-5 text-indigo-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(deal.totalRevenue)}</div>
+              <div className="text-2xl font-bold text-indigo-900">{quoteVersions.length}</div>
+              <p className="text-xs text-indigo-600 font-medium mt-1">Quote versions</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Margin</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-emerald-700">Combined Revenue</CardTitle>
+              <Sparkles className="h-5 w-5 text-emerald-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{deal.marginPercent}%</div>
+              <div className="text-2xl font-bold text-emerald-900">{formatCurrency(totalRevenue)}</div>
+              <p className="text-xs text-emerald-600 font-medium mt-1">All scenarios</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Deal Owner</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-violet-700">Avg. Margin</CardTitle>
+              <Target className="h-5 w-5 text-violet-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-semibold">{deal.dealOwner}</div>
+              <div className="text-2xl font-bold text-violet-900">{averageMargin.toFixed(1)}%</div>
+              <p className="text-xs text-violet-600 font-medium mt-1">Across scenarios</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quote Creation Options */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Create New Quote</CardTitle>
-            <CardDescription>
-              Choose how you want to create a new quote version
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Action Buttons */}
+        <div className="mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+              <Plus className="h-5 w-5 text-blue-600" />
+              <span>Create New Quote Scenario</span>
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button 
-                onClick={handleCreateNewQuote}
-                className="flex items-center space-x-2 h-auto p-4 flex-col"
-                variant="outline"
+                className="h-16 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center space-y-1"
               >
-                <Plus className="h-6 w-6 mb-2" />
-                <div className="text-center">
-                  <div className="font-medium">Create New</div>
-                  <div className="text-sm text-muted-foreground">Start from beginning</div>
-                </div>
+                <Plus className="h-5 w-5" />
+                <span className="font-semibold">Create New</span>
+                <span className="text-xs opacity-90">Start from scratch</span>
               </Button>
-
+              
               <Button 
-                onClick={handleCopyFromExisting}
-                className="flex items-center space-x-2 h-auto p-4 flex-col"
                 variant="outline"
+                className="h-16 border-2 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center space-y-1"
               >
-                <Copy className="h-6 w-6 mb-2" />
-                <div className="text-center">
-                  <div className="font-medium">Copy Existing</div>
-                  <div className="text-sm text-muted-foreground">From this deal</div>
-                </div>
+                <Copy className="h-5 w-5" />
+                <span className="font-semibold">Copy Existing</span>
+                <span className="text-xs opacity-75">From this deal</span>
               </Button>
-
+              
               <Button 
-                onClick={handleCopyFromOtherDeal}
-                className="flex items-center space-x-2 h-auto p-4 flex-col"
                 variant="outline"
+                className="h-16 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col items-center justify-center space-y-1"
               >
-                <FileSearch className="h-6 w-6 mb-2" />
-                <div className="text-center">
-                  <div className="font-medium">Copy from Deal</div>
-                  <div className="text-sm text-muted-foreground">From another deal</div>
-                </div>
+                <FileSearch className="h-5 w-5" />
+                <span className="font-semibold">Copy from Deal</span>
+                <span className="text-xs opacity-75">From another deal</span>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quote Versions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quote Versions</CardTitle>
-            <CardDescription>
-              All quote versions created for this deal
+        <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-t-lg border-b border-gray-100">
+            <CardTitle className="text-2xl font-bold text-gray-900">Quote Scenarios</CardTitle>
+            <CardDescription className="text-gray-600 text-base">
+              Manage and compare different pricing scenarios for this deal
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
+          <CardContent className="p-0">
+            <div className="overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Quote ID</TableHead>
-                    <TableHead>Quote Name</TableHead>
-                    <TableHead>Created Date</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead>Margin %</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/70">
+                    <TableHead className="font-bold text-gray-700 py-4">Quote Name</TableHead>
+                    <TableHead className="font-bold text-gray-700 py-4">Created Date</TableHead>
+                    <TableHead className="font-bold text-gray-700 py-4">Created By</TableHead>
+                    <TableHead className="font-bold text-gray-700 py-4">Revenue</TableHead>
+                    <TableHead className="font-bold text-gray-700 py-4">Margin %</TableHead>
+                    <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {quoteVersions.map((quote) => (
-                    <TableRow key={quote.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">{quote.id}</TableCell>
-                      <TableCell className="font-medium">{quote.quoteName}</TableCell>
-                      <TableCell>{formatDate(quote.createdDate)}</TableCell>
-                      <TableCell>{quote.createdBy}</TableCell>
-                      <TableCell className="font-semibold">
+                  {quoteVersions.map((quote, index) => (
+                    <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                      <TableCell className="py-4">
+                        <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
+                        <div className="text-sm text-gray-500 font-mono">{quote.id}</div>
+                      </TableCell>
+                      <TableCell className="text-gray-600 py-4">{quote.createdDate}</TableCell>
+                      <TableCell className="font-medium text-gray-700 py-4">{quote.createdBy}</TableCell>
+                      <TableCell className="font-bold text-lg text-green-700 py-4">
                         {formatCurrency(quote.revenue)}
                       </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{quote.marginPercent.toFixed(1)}%</span>
+                      <TableCell className="py-4">
+                        <span className="font-bold text-base text-indigo-600">{quote.marginPercent}%</span>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(quote.status)}>
+                      <TableCell className="py-4">
+                        <Badge className={`${getStatusColor(quote.status)} font-semibold px-3 py-1 border`}>
                           {quote.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            View
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Copy
-                          </Button>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
