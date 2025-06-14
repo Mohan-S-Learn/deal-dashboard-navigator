@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -268,10 +269,11 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       return;
     }
 
+    // Generate a NEW unique Quote_ID for the copied quote
     const newQuoteId = await generateUniqueQuoteId(dealId, quoteVersions);
 
     const newQuote = {
-      quoteId: newQuoteId,
+      quoteId: newQuoteId, // Use the NEW Quote_ID, not the original one
       quoteName: newQuoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
