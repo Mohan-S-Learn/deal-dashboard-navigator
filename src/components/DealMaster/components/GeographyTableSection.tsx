@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
 
   // Pass data back to parent whenever it changes
   useEffect(() => {
+    console.log('Geography - sending data to parent:', selectedRows);
     onDataChange(selectedRows);
   }, [selectedRows, onDataChange]);
 
@@ -57,22 +59,30 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   };
 
   const updateRow = (id: string, field: keyof SelectedGeographyRow, value: string) => {
-    setSelectedRows(prev => prev.map(row => {
-      if (row.id === id) {
-        const updatedRow = { ...row, [field]: value };
-        
-        // Reset dependent fields when parent changes
-        if (field === 'region') {
-          updatedRow.country = '';
-          updatedRow.city = '';
-        } else if (field === 'country') {
-          updatedRow.city = '';
+    console.log(`Geography - updating row ${id}, field ${field}, value:`, value);
+    
+    setSelectedRows(prev => {
+      const updatedRows = prev.map(row => {
+        if (row.id === id) {
+          const updatedRow = { ...row, [field]: value };
+          
+          // Reset dependent fields when parent changes
+          if (field === 'region') {
+            updatedRow.country = '';
+            updatedRow.city = '';
+          } else if (field === 'country') {
+            updatedRow.city = '';
+          }
+          
+          console.log(`Geography - updated row:`, updatedRow);
+          return updatedRow;
         }
-        
-        return updatedRow;
-      }
-      return row;
-    }));
+        return row;
+      });
+      
+      console.log('Geography - all rows after update:', updatedRows);
+      return updatedRows;
+    });
   };
 
   const addRows = (count: number) => {
@@ -162,7 +172,13 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
             {selectedRows.map((row, index) => (
               <TableRow key={row.id} className={isDuplicate(row) ? 'bg-red-50' : ''}>
                 <TableCell>
-                  <Select value={row.region} onValueChange={(value) => updateRow(row.id, 'region', value)}>
+                  <Select 
+                    value={row.region} 
+                    onValueChange={(value) => {
+                      console.log(`Geography - Select region changed for row ${row.id}:`, value);
+                      updateRow(row.id, 'region', value);
+                    }}
+                  >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select region" />
                     </SelectTrigger>
@@ -178,7 +194,10 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 <TableCell>
                   <Select 
                     value={row.country} 
-                    onValueChange={(value) => updateRow(row.id, 'country', value)}
+                    onValueChange={(value) => {
+                      console.log(`Geography - Select country changed for row ${row.id}:`, value);
+                      updateRow(row.id, 'country', value);
+                    }}
                     disabled={!row.region}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
@@ -196,7 +215,10 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 <TableCell>
                   <Select 
                     value={row.city} 
-                    onValueChange={(value) => updateRow(row.id, 'city', value)}
+                    onValueChange={(value) => {
+                      console.log(`Geography - Select city changed for row ${row.id}:`, value);
+                      updateRow(row.id, 'city', value);
+                    }}
                     disabled={!row.country}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
