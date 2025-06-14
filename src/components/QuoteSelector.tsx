@@ -22,21 +22,47 @@ interface QuoteSelectorProps {
   availableQuotes: Quote[];
   selectedQuoteId: string;
   onQuoteSelect: (quoteId: string) => void;
+  loading?: boolean;
 }
 
 const QuoteSelector: React.FC<QuoteSelectorProps> = ({
   selectedDeal,
   availableQuotes,
   selectedQuoteId,
-  onQuoteSelect
+  onQuoteSelect,
+  loading = false
 }) => {
   console.log('QuoteSelector - selectedDeal:', selectedDeal);
   console.log('QuoteSelector - availableQuotes:', availableQuotes);
   console.log('QuoteSelector - selectedQuoteId:', selectedQuoteId);
 
-  if (!selectedDeal || availableQuotes.length === 0) {
-    console.log('QuoteSelector - No deal selected or no quotes available');
+  if (!selectedDeal) {
+    console.log('QuoteSelector - No deal selected');
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <Label className="text-base font-semibold">
+          Loading quotes for {selectedDeal.name}...
+        </Label>
+        <div className="w-full h-10 bg-gray-100 rounded animate-pulse"></div>
+      </div>
+    );
+  }
+
+  if (availableQuotes.length === 0) {
+    return (
+      <div className="space-y-3">
+        <Label className="text-base font-semibold">
+          No quotes found for {selectedDeal.name}
+        </Label>
+        <div className="text-sm text-gray-500">
+          This deal doesn't have any quote scenarios yet.
+        </div>
+      </div>
+    );
   }
 
   return (

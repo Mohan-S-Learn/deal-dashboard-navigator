@@ -41,31 +41,34 @@ export type Database = {
       }
       Quotes: {
         Row: {
-          Created_By: string | null
-          Created_Date: string | null
+          Created_By: string
+          Created_Date: string
           Deal_Id: string
-          "Margin %": number | null
+          "Margin %": number
+          Quote_ID: string | null
           Quote_Name: string
-          Revenue: number | null
-          Status: string | null
+          Revenue: number
+          Status: string
         }
         Insert: {
-          Created_By?: string | null
-          Created_Date?: string | null
+          Created_By: string
+          Created_Date: string
           Deal_Id: string
-          "Margin %"?: number | null
+          "Margin %": number
+          Quote_ID?: string | null
           Quote_Name: string
-          Revenue?: number | null
-          Status?: string | null
+          Revenue: number
+          Status: string
         }
         Update: {
-          Created_By?: string | null
-          Created_Date?: string | null
+          Created_By?: string
+          Created_Date?: string
           Deal_Id?: string
-          "Margin %"?: number | null
+          "Margin %"?: number
+          Quote_ID?: string | null
           Quote_Name?: string
-          Revenue?: number | null
-          Status?: string | null
+          Revenue?: number
+          Status?: string
         }
         Relationships: [
           {
