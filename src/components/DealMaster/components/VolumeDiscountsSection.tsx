@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { VolumeDiscountRange } from '../types';
+import { AddRowsDialog } from './AddRowsDialog';
 
 interface VolumeDiscountsSectionProps {
   volumeDiscounts: VolumeDiscountRange[];
@@ -20,15 +21,22 @@ export const VolumeDiscountsSection: React.FC<VolumeDiscountsSectionProps> = ({
   onRemoveVolumeDiscount,
   onUpdateVolumeDiscount
 }) => {
+  const addMultipleRows = (count: number) => {
+    for (let i = 0; i < count; i++) {
+      onAddVolumeDiscount();
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Volume Discounts</CardTitle>
-          <Button onClick={onAddVolumeDiscount} size="sm" className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>Add Range</span>
-          </Button>
+          <AddRowsDialog
+            title="Add Volume Discount Rows"
+            buttonText="Add Rows"
+            onAddRows={addMultipleRows}
+          />
         </div>
       </CardHeader>
       <CardContent>

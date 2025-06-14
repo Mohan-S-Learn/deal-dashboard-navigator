@@ -30,6 +30,13 @@ export interface VolumeDiscountRange {
   discount_percent: number;
 }
 
+export interface SelectedGeographyRow {
+  id: string;
+  region: string;
+  country: string;
+  city: string;
+}
+
 export interface QuoteData {
   knowledge_transition_start_date: Date | null;
   knowledge_transition_end_date: Date | null;
