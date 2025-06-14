@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +40,11 @@ const formatCurrency = (amount: number) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+// Helper function to generate unique Quote ID
+const generateUniqueQuoteId = (dealId: string) => {
+  return `QT-${dealId}-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 };
 
 const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
@@ -107,6 +111,9 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
     try {
       console.log('Saving quote to database:', quote);
       
+      // Generate a unique Quote_ID - this should always be set now
+      const uniqueQuoteId = quote.quoteId || generateUniqueQuoteId(dealId);
+      
       // Generate a unique quote name if it already exists
       const existingQuotes = await supabase
         .from('Quotes')
@@ -124,9 +131,6 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         }
       }
 
-      // Generate a unique Quote_ID
-      const uniqueQuoteId = `${dealId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
       const { error } = await supabase
         .from('Quotes')
         .insert({
@@ -150,7 +154,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         return false;
       }
 
-      console.log('Quote saved successfully with name:', uniqueQuoteName);
+      console.log('Quote saved successfully with ID:', uniqueQuoteId, 'and name:', uniqueQuoteName);
       return true;
     } catch (error) {
       console.error('Error saving quote:', error);
@@ -173,8 +177,10 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
   };
 
   const handleCreateNewQuote = async (quoteName: string) => {
+    const newQuoteId = generateUniqueQuoteId(dealId);
+    
     const newQuote = {
-      quoteId: null,
+      quoteId: newQuoteId,
       quoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
@@ -190,7 +196,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       
       toast({
         title: "Quote Scenario Created",
-        description: `"${quoteName}" has been created and saved successfully.`
+        description: `"${quoteName}" has been created with ID: ${newQuoteId}.`
       });
     }
   };
@@ -208,8 +214,10 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       return;
     }
 
+    const newQuoteId = generateUniqueQuoteId(dealId);
+
     const newQuote = {
-      quoteId: null,
+      quoteId: newQuoteId,
       quoteName: newQuoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
@@ -225,7 +233,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       
       toast({
         title: "Quote Scenario Copied",
-        description: `"${newQuoteName}" has been created from "${originalQuote.quoteName}" and saved.`
+        description: `"${newQuoteName}" has been created with ID: ${newQuoteId}.`
       });
     }
   };
@@ -252,8 +260,10 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         return;
       }
 
+      const newQuoteId = generateUniqueQuoteId(dealId);
+
       const newQuote = {
-        quoteId: null,
+        quoteId: newQuoteId,
         quoteName: newQuoteName,
         createdDate: new Date().toISOString().split('T')[0],
         createdBy: 'Current User',
@@ -269,7 +279,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         
         toast({
           title: "Quote Scenario Copied",
-          description: `"${newQuoteName}" has been copied from another deal and saved.`
+          description: `"${newQuoteName}" has been copied with ID: ${newQuoteId}.`
         });
       }
     } catch (error) {
@@ -387,7 +397,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
                     {quoteVersions.map((quote, index) => (
                       <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                         <TableCell className="py-4">
-                          <div className="font-mono text-sm text-gray-600">
+                          <div className="font-mono text-sm text-gray-600 font-semibold">
                             {quote.quoteId || 'N/A'}
                           </div>
                         </TableCell>
