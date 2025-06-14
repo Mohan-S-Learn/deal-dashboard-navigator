@@ -8,7 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Deal, Quote, formatCurrency } from './dealData';
+import { Deal, formatCurrency } from '../data/mockData';
+
+export interface Quote {
+  id: string;
+  name: string;
+  revenue: number;
+  margin: number;
+}
 
 interface QuoteSelectorProps {
   selectedDeal: Deal | undefined;

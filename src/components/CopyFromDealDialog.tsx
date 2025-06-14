@@ -12,14 +12,47 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DealSelector from './DealSelector';
-import QuoteSelector from './QuoteSelector';
-import { mockDeals, mockQuotesForDeal } from './dealData';
+import QuoteSelector, { Quote } from './QuoteSelector';
+import { mockDeals } from '../data/mockData';
 
 interface CopyFromDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCopyFromDeal: (dealId: string, quoteId: string, newQuoteName: string) => void;
 }
+
+// Mock quotes for each deal from My Deals page
+const mockQuotesForDeal: Record<string, Quote[]> = {
+  'DEAL-001': [
+    { id: 'Q001', name: 'Basic Cloud Migration', revenue: 200000, margin: 30 },
+    { id: 'Q002', name: 'Enhanced Cloud Migration with Support', revenue: 300000, margin: 35 },
+    { id: 'Q003', name: 'Premium Cloud Migration Solution', revenue: 450000, margin: 40 }
+  ],
+  'DEAL-002': [
+    { id: 'Q004', name: 'Phase 1 - Digital Assessment', revenue: 350000, margin: 38 },
+    { id: 'Q005', name: 'Complete Digital Transformation', revenue: 600000, margin: 42 },
+    { id: 'Q006', name: 'Premium Transformation Suite', revenue: 780000, margin: 45 }
+  ],
+  'DEAL-003': [
+    { id: 'Q007', name: 'Security Essentials Package', revenue: 180000, margin: 25 },
+    { id: 'Q008', name: 'Advanced Security Suite', revenue: 250000, margin: 28 },
+    { id: 'Q009', name: 'Enterprise Security Platform', revenue: 320000, margin: 32 }
+  ],
+  'DEAL-004': [
+    { id: 'Q010', name: 'Basic Analytics Platform', revenue: 500000, margin: 35 },
+    { id: 'Q011', name: 'Advanced Analytics Suite', revenue: 750000, margin: 38 },
+    { id: 'Q012', name: 'Enterprise Analytics Platform', revenue: 950000, margin: 42 }
+  ],
+  'DEAL-005': [
+    { id: 'Q013', name: 'MVP Mobile App', revenue: 100000, margin: 40 },
+    { id: 'Q014', name: 'Full Mobile App Development', revenue: 180000, margin: 45 }
+  ],
+  'DEAL-006': [
+    { id: 'Q015', name: 'AI Implementation Phase 1', revenue: 600000, margin: 48 },
+    { id: 'Q016', name: 'Complete AI Implementation', revenue: 900000, margin: 52 },
+    { id: 'Q017', name: 'Premium AI Services Suite', revenue: 1200000, margin: 55 }
+  ]
+};
 
 const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
   open,
