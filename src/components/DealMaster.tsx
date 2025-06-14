@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -128,24 +129,43 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     });
 
     // Convert geography table data to selected geography IDs
-    const geographyIds = geographyTableData
-      .filter(row => row.region && row.country && row.city)
-      .map(row => {
+    const geographyIds: number[] = [];
+    geographyTableData.forEach(row => {
+      if (row.region && row.country && row.city) {
         const geography = geographies.find(g => 
           g.region === row.region && 
           g.country === row.country && 
           g.city === row.city
         );
-        return geography?.id;
-      })
-      .filter(id => id !== undefined);
+        if (geography) {
+          geographyIds.push(geography.id);
+        } else {
+          console.warn('Geography not found for:', row);
+        }
+      }
+    });
 
-    // Convert category table data to selected categories
-    const categoryData = categoryTableData.length > 0 && categoryTableData[0].level1 ? {
-      level1: categoryTableData[0].level1,
-      level2: categoryTableData[0].level2,
-      level3: categoryTableData[0].level3,
-    } : selectedCategories;
+    // Convert category table data to multiple selected categories
+    const allCategoryData: SelectedCategories[] = [];
+    categoryTableData.forEach(row => {
+      if (row.level1) {
+        allCategoryData.push({
+          level1: row.level1,
+          level2: row.level2,
+          level3: row.level3,
+        });
+      }
+    });
+
+    console.log('Converted data:', {
+      geographyIds,
+      allCategoryData,
+      originalGeographyData: geographyTableData,
+      originalCategoryData: categoryTableData
+    });
+
+    // For now, we'll save the first category combination (the current API only supports one)
+    const categoryData = allCategoryData.length > 0 ? allCategoryData[0] : selectedCategories;
 
     saveData(
       dealId,
