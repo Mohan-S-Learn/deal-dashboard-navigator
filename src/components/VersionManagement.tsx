@@ -1,21 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Plus, Copy, FileSearch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import CreateNewQuoteDialog from './CreateNewQuoteDialog';
 import CopyExistingQuoteDialog from './CopyExistingQuoteDialog';
 import CopyFromDealDialog from './CopyFromDealDialog';
+import QuoteActions from './QuoteActions';
+import QuoteTable from './QuoteTable';
+import { generateUniqueQuoteId } from '../utils/quoteUtils';
 
 interface VersionManagementProps {
   dealId: string;
@@ -32,59 +25,6 @@ interface QuoteVersion {
   marginPercent: number;
   status: 'Draft' | 'Active' | 'Archived';
 }
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
-// Helper function to generate unique Quote ID with simple format
-const generateUniqueQuoteId = async (dealId: string) => {
-  try {
-    // Query the database to get all existing Quote_IDs for this deal
-    const { data: existingQuotes, error } = await supabase
-      .from('Quotes')
-      .select('Quote_ID')
-      .eq('Deal_Id', dealId)
-      .not('Quote_ID', 'is', null);
-
-    if (error) {
-      console.error('Error fetching existing Quote_IDs:', error);
-      // Fallback to basic numbering if database query fails
-      return `${dealId}-QT-001`;
-    }
-
-    console.log('Existing Quote_IDs for deal', dealId, ':', existingQuotes);
-
-    // Extract the numeric parts and find the highest number
-    const existingIds = existingQuotes
-      .map(q => q.Quote_ID)
-      .filter(id => id && id.startsWith(`${dealId}-QT-`));
-
-    const numbers = existingIds
-      .map(id => {
-        const match = id.match(/QT-(\d+)$/);
-        return match ? parseInt(match[1], 10) : 0;
-      })
-      .filter(num => !isNaN(num));
-
-    const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
-    const nextNumber = maxNumber + 1;
-    
-    const newQuoteId = `${dealId}-QT-${nextNumber.toString().padStart(3, '0')}`;
-    console.log('Generated new Quote_ID:', newQuoteId);
-    
-    return newQuoteId;
-  } catch (error) {
-    console.error('Error in generateUniqueQuoteId:', error);
-    // Fallback to basic numbering
-    return `${dealId}-QT-001`;
-  }
-};
 
 const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
   const [quoteVersions, setQuoteVersions] = useState<QuoteVersion[]>([]);
@@ -244,15 +184,6 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Draft': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Archived': return 'bg-gray-100 text-gray-700 border-gray-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
   const handleCreateNewQuote = async (quoteName: string) => {
     const newQuoteId = await generateUniqueQuoteId(dealId);
     
@@ -398,50 +329,11 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         {/* Action Buttons */}
-        <div className="mb-8">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-xl p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
-              <Plus className="h-5 w-5 text-blue-600" />
-              <span>Create New Quote Scenario</span>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button 
-                onClick={() => setCreateNewDialogOpen(true)}
-                className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <Plus className="h-4 w-4" />
-                <div className="text-center">
-                  <div className="font-medium text-sm">Create New</div>
-                  <div className="text-xs opacity-90">Start from scratch</div>
-                </div>
-              </Button>
-              
-              <Button 
-                onClick={() => setCopyExistingDialogOpen(true)}
-                variant="outline"
-                className="h-12 border-2 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <Copy className="h-4 w-4" />
-                <div className="text-center">
-                  <div className="font-medium text-sm">Copy Existing</div>
-                  <div className="text-xs opacity-75">From this deal</div>
-                </div>
-              </Button>
-              
-              <Button 
-                onClick={() => setCopyFromDealDialogOpen(true)}
-                variant="outline"
-                className="h-12 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <FileSearch className="h-4 w-4" />
-                <div className="text-center">
-                  <div className="font-medium text-sm">Copy from Deal</div>
-                  <div className="text-xs opacity-75">From another deal</div>
-                </div>
-              </Button>
-            </div>
-          </div>
-        </div>
+        <QuoteActions
+          onCreateNew={() => setCreateNewDialogOpen(true)}
+          onCopyExisting={() => setCopyExistingDialogOpen(true)}
+          onCopyFromDeal={() => setCopyFromDealDialogOpen(true)}
+        />
 
         {/* Quote Versions Table */}
         <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
@@ -453,54 +345,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-hidden">
-              {quoteVersions.length === 0 ? (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500 text-lg">No quote scenarios found for this deal.</p>
-                  <p className="text-gray-400 mt-2">Create your first quote scenario using the buttons above.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50/50 hover:bg-gray-50/70">
-                      <TableHead className="font-bold text-gray-700 py-4">Quote ID</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Quote Name</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Created Date</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Created By</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Revenue</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Margin %</TableHead>
-                      <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {quoteVersions.map((quote, index) => (
-                      <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                        <TableCell className="py-4">
-                          <div className="font-mono text-sm text-gray-600 font-semibold">
-                            {quote.quoteId || 'N/A'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
-                          <div className="text-sm text-gray-500 font-mono">{quote.id}</div>
-                        </TableCell>
-                        <TableCell className="text-gray-600 py-4">{quote.createdDate}</TableCell>
-                        <TableCell className="font-medium text-gray-700 py-4">{quote.createdBy}</TableCell>
-                        <TableCell className="font-bold text-lg text-green-700 py-4">
-                          {formatCurrency(quote.revenue)}
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <span className="font-bold text-base text-indigo-600">{quote.marginPercent}%</span>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <Badge className={`${getStatusColor(quote.status)} font-semibold px-3 py-1 border`}>
-                            {quote.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <QuoteTable quoteVersions={quoteVersions} />
             </div>
           </CardContent>
         </Card>
