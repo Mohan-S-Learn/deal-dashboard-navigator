@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,7 @@ interface Geography {
   region: string;
 }
 
-interface ClientCategory {
+interface ServiceCategory {
   id: number;
   level: number;
   name: string;
@@ -89,7 +88,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   const [markets, setMarkets] = useState<Market[]>([]);
   const [resourceTypes, setResourceTypes] = useState<ResourceType[]>([]);
   const [geographies, setGeographies] = useState<Geography[]>([]);
-  const [clientCategories, setClientCategories] = useState<ClientCategory[]>([]);
+  const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
   const [selectedResourceTypes, setSelectedResourceTypes] = useState<number[]>([]);
   const [selectedGeographies, setSelectedGeographies] = useState<number[]>([]);
   const [selectedCategories, setSelectedCategories] = useState({
@@ -125,9 +124,9 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
       const { data: geographiesData } = await supabase.from('Geography').select('*').order('country, city');
       setGeographies(geographiesData || []);
 
-      // Load client categories
-      const { data: categoriesData } = await supabase.from('ClientCategory').select('*').order('level, name');
-      setClientCategories(categoriesData || []);
+      // Load service categories
+      const { data: categoriesData } = await supabase.from('ServiceCategory').select('*').order('level, name');
+      setServiceCategories(categoriesData || []);
     } catch (error) {
       console.error('Error loading master data:', error);
       toast({
@@ -187,9 +186,9 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
       
       setSelectedGeographies(geographyData?.map(g => g.geography_id) || []);
 
-      // Load client categories
+      // Load service categories
       const { data: categoryData } = await supabase
-        .from('QuoteClientCategory')
+        .from('QuoteServiceCategory')
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
@@ -331,10 +330,10 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
         await supabase.from('QuoteGeography').insert(geographyInserts);
       }
 
-      // Save client categories
-      await supabase.from('QuoteClientCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
+      // Save service categories
+      await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       if (selectedCategories.level1 || selectedCategories.level2 || selectedCategories.level3) {
-        await supabase.from('QuoteClientCategory').insert({
+        await supabase.from('QuoteServiceCategory').insert({
           Deal_Id: dealId,
           Quote_Name: quoteName,
           category_level_1_id: selectedCategories.level1,
@@ -383,7 +382,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   }
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
-    return clientCategories.filter(cat => 
+    return serviceCategories.filter(cat => 
       cat.level === level && 
       (level === 1 ? cat.parent_id === null : cat.parent_id === parentId)
     );
@@ -704,20 +703,20 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
           </CardContent>
         </Card>
 
-        {/* Client Categories Section */}
+        {/* Service Categories Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Client Categories</CardTitle>
+            <CardTitle>Service Categories</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <Label>Category Level 1</Label>
+              <Label>Service Level 1</Label>
               <Select 
                 value={selectedCategories.level1?.toString() || ''} 
                 onValueChange={(value) => setSelectedCategories(prev => ({ ...prev, level1: parseInt(value), level2: null, level3: null }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level 1 category" />
+                  <SelectValue placeholder="Select service category" />
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredCategories(1).map(cat => (
@@ -728,14 +727,14 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
             </div>
 
             <div className="space-y-2">
-              <Label>Category Level 2</Label>
+              <Label>Service Level 2</Label>
               <Select 
                 value={selectedCategories.level2?.toString() || ''} 
                 onValueChange={(value) => setSelectedCategories(prev => ({ ...prev, level2: parseInt(value), level3: null }))}
                 disabled={!selectedCategories.level1}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level 2 category" />
+                  <SelectValue placeholder="Select service subcategory" />
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredCategories(2, selectedCategories.level1).map(cat => (
@@ -746,14 +745,14 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
             </div>
 
             <div className="space-y-2">
-              <Label>Category Level 3</Label>
+              <Label>Service Level 3</Label>
               <Select 
                 value={selectedCategories.level3?.toString() || ''} 
                 onValueChange={(value) => setSelectedCategories(prev => ({ ...prev, level3: parseInt(value) }))}
                 disabled={!selectedCategories.level2}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level 3 category" />
+                  <SelectValue placeholder="Select specific service" />
                 </SelectTrigger>
                 <SelectContent>
                   {getFilteredCategories(3, selectedCategories.level2).map(cat => (

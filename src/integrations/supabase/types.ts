@@ -9,38 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      ClientCategory: {
-        Row: {
-          created_at: string | null
-          id: number
-          level: number
-          name: string
-          parent_id: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          level: number
-          name: string
-          parent_id?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          level?: number
-          name?: string
-          parent_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ClientCategory_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "ClientCategory"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       Deals: {
         Row: {
           Created_Date: string
@@ -112,65 +80,6 @@ export type Database = {
           name?: string
         }
         Relationships: []
-      }
-      QuoteClientCategory: {
-        Row: {
-          category_level_1_id: number | null
-          category_level_2_id: number | null
-          category_level_3_id: number | null
-          created_at: string | null
-          Deal_Id: string
-          id: number
-          Quote_Name: string
-        }
-        Insert: {
-          category_level_1_id?: number | null
-          category_level_2_id?: number | null
-          category_level_3_id?: number | null
-          created_at?: string | null
-          Deal_Id: string
-          id?: number
-          Quote_Name: string
-        }
-        Update: {
-          category_level_1_id?: number | null
-          category_level_2_id?: number | null
-          category_level_3_id?: number | null
-          created_at?: string | null
-          Deal_Id?: string
-          id?: number
-          Quote_Name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "QuoteClientCategory_category_level_1_id_fkey"
-            columns: ["category_level_1_id"]
-            isOneToOne: false
-            referencedRelation: "ClientCategory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "QuoteClientCategory_category_level_2_id_fkey"
-            columns: ["category_level_2_id"]
-            isOneToOne: false
-            referencedRelation: "ClientCategory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "QuoteClientCategory_category_level_3_id_fkey"
-            columns: ["category_level_3_id"]
-            isOneToOne: false
-            referencedRelation: "ClientCategory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "QuoteClientCategory_Deal_Id_Quote_Name_fkey"
-            columns: ["Deal_Id", "Quote_Name"]
-            isOneToOne: true
-            referencedRelation: "Quotes"
-            referencedColumns: ["Deal_Id", "Quote_Name"]
-          },
-        ]
       }
       QuoteGeography: {
         Row: {
@@ -340,6 +249,65 @@ export type Database = {
           },
         ]
       }
+      QuoteServiceCategory: {
+        Row: {
+          category_level_1_id: number | null
+          category_level_2_id: number | null
+          category_level_3_id: number | null
+          created_at: string | null
+          Deal_Id: string
+          id: number
+          Quote_Name: string
+        }
+        Insert: {
+          category_level_1_id?: number | null
+          category_level_2_id?: number | null
+          category_level_3_id?: number | null
+          created_at?: string | null
+          Deal_Id: string
+          id?: number
+          Quote_Name: string
+        }
+        Update: {
+          category_level_1_id?: number | null
+          category_level_2_id?: number | null
+          category_level_3_id?: number | null
+          created_at?: string | null
+          Deal_Id?: string
+          id?: number
+          Quote_Name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "QuoteClientCategory_Deal_Id_Quote_Name_fkey"
+            columns: ["Deal_Id", "Quote_Name"]
+            isOneToOne: true
+            referencedRelation: "Quotes"
+            referencedColumns: ["Deal_Id", "Quote_Name"]
+          },
+          {
+            foreignKeyName: "QuoteServiceCategory_category_level_1_id_fkey"
+            columns: ["category_level_1_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteServiceCategory_category_level_2_id_fkey"
+            columns: ["category_level_2_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteServiceCategory_category_level_3_id_fkey"
+            columns: ["category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ResourceType: {
         Row: {
           created_at: string | null
@@ -357,6 +325,38 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      ServiceCategory: {
+        Row: {
+          created_at: string | null
+          id: number
+          level: number
+          name: string
+          parent_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          level: number
+          name: string
+          parent_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          level?: number
+          name?: string
+          parent_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ServiceCategory_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       VolumeDiscount: {
         Row: {
