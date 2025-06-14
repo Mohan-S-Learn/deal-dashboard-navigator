@@ -1,9 +1,11 @@
+
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -16,12 +18,17 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
+        caption_dropdowns: "flex justify-center gap-1",
+        vhidden: "hidden",
+        dropdown_month: "relative inline-flex items-center",
+        dropdown_year: "relative inline-flex items-center",
+        dropdown: "absolute inset-0 w-full appearance-none opacity-0 z-10 cursor-pointer",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -54,7 +61,25 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Dropdown: ({ value, onChange, children, ...props }) => (
+          <Select value={value?.toString()} onValueChange={(val) => onChange?.(new Date(parseInt(val, 10), 0))}>
+            <SelectTrigger className="h-7 w-fit border-0 p-1 focus:ring-0 focus:ring-offset-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper">
+              {children}
+            </SelectContent>
+          </Select>
+        ),
+        Option: ({ value, children, ...props }) => (
+          <SelectItem value={value?.toString() || ""} {...props}>
+            {children}
+          </SelectItem>
+        ),
       }}
+      captionLayout="dropdown-buttons"
+      fromYear={1900}
+      toYear={2100}
       {...props}
     />
   );

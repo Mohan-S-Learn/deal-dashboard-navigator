@@ -388,19 +388,97 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     );
   };
 
-  const DatePicker = ({ value, onChange, placeholder }: { value: Date | null, onChange: (date: Date | undefined) => void, placeholder: string }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !value && "text-muted-foreground")}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? format(value, "PPP") : placeholder}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar mode="single" selected={value || undefined} onSelect={onChange} initialFocus />
-      </PopoverContent>
-    </Popover>
-  );
+  const parseDate = (dateString: string): Date | null => {
+    if (!dateString) return null;
+    
+    // Check if it's in dd/mm/yyyy format
+    const ddmmyyyyRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = dateString.match(ddmmyyyyRegex);
+    
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1; // Month is 0-indexed
+      const year = parseInt(match[3], 10);
+      
+      const date = new Date(year, month, day);
+      
+      // Validate the date
+      if (date.getDate() === day && date.getMonth() === month && date.getFullYear() === year) {
+        return date;
+      }
+    }
+    
+    return null;
+  };
+
+  const formatDate = (date: Date | null): string => {
+    if (!date) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleDateInputChange = (field: keyof QuoteData, value: string) => {
+    const parsedDate = parseDate(value);
+    setQuoteData(prev => ({ ...prev, [field]: parsedDate }));
+  };
+
+  const DatePicker = ({ value, onChange, placeholder }: { value: Date | null, onChange: (date: Date | undefined) => void, placeholder: string }) => {
+    const [inputValue, setInputValue] = React.useState(formatDate(value));
+
+    React.useEffect(() => {
+      setInputValue(formatDate(value));
+    }, [value]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setInputValue(newValue);
+      
+      const parsedDate = parseDate(newValue);
+      if (parsedDate) {
+        onChange(parsedDate);
+      } else if (newValue === '') {
+        onChange(undefined);
+      }
+    };
+
+    const handleCalendarSelect = (date: Date | undefined) => {
+      onChange(date);
+      setInputValue(formatDate(date || null));
+    };
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <div className="relative">
+            <Input
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder="dd/mm/yyyy"
+              className="w-full pr-10"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              type="button"
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar 
+            mode="single" 
+            selected={value || undefined} 
+            onSelect={handleCalendarSelect} 
+            initialFocus 
+          />
+        </PopoverContent>
+      </Popover>
+    );
+  };
 
   return (
     <div className="min-h-screen">
