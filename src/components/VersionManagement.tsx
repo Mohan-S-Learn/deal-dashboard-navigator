@@ -11,7 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { ArrowLeft, Plus, Copy, FileSearch, Sparkles, Target } from 'lucide-react';
+import { Plus, Copy, FileSearch, Sparkles, Target } from 'lucide-react';
 
 interface VersionManagementProps {
   dealId: string;
@@ -88,19 +88,9 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={onBack}
-                className="flex items-center space-x-2 hover:bg-gray-50 border-gray-200"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Deals</span>
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Scenario Builder</h1>
-                <p className="text-gray-500 font-medium">Deal ID: {dealId}</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Scenario Builder</h1>
+              <p className="text-gray-500 font-medium">Deal ID: {dealId}</p>
             </div>
           </div>
         </div>
@@ -109,36 +99,36 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold text-indigo-700">Total Scenarios</CardTitle>
-              <Target className="h-5 w-5 text-indigo-600" />
+              <Target className="h-4 w-4 text-indigo-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-indigo-900">{quoteVersions.length}</div>
+            <CardContent className="pb-3">
+              <div className="text-xl font-bold text-indigo-900">{quoteVersions.length}</div>
               <p className="text-xs text-indigo-600 font-medium mt-1">Quote versions</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold text-emerald-700">Combined Revenue</CardTitle>
-              <Sparkles className="h-5 w-5 text-emerald-600" />
+              <Sparkles className="h-4 w-4 text-emerald-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-900">{formatCurrency(totalRevenue)}</div>
+            <CardContent className="pb-3">
+              <div className="text-xl font-bold text-emerald-900">{formatCurrency(totalRevenue)}</div>
               <p className="text-xs text-emerald-600 font-medium mt-1">All scenarios</p>
             </CardContent>
           </Card>
 
           <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-semibold text-violet-700">Avg. Margin</CardTitle>
-              <Target className="h-5 w-5 text-violet-600" />
+              <Target className="h-4 w-4 text-violet-600" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-violet-900">{averageMargin.toFixed(1)}%</div>
+            <CardContent className="pb-3">
+              <div className="text-xl font-bold text-violet-900">{averageMargin.toFixed(1)}%</div>
               <p className="text-xs text-violet-600 font-medium mt-1">Across scenarios</p>
             </CardContent>
           </Card>
