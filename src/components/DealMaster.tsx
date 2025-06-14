@@ -229,10 +229,21 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
       const startDate = new Date(quoteData.knowledge_transition_start_date);
       const endDate = new Date(quoteData.steady_state_end_date);
       
-      const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                    (endDate.getMonth() - startDate.getMonth());
+      // Calculate the difference in months more accurately
+      let months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+      months += endDate.getMonth() - startDate.getMonth();
       
-      setQuoteData(prev => ({ ...prev, overall_duration_months: months }));
+      // If the end day is before the start day in the month, subtract 1
+      if (endDate.getDate() < startDate.getDate()) {
+        months--;
+      }
+      
+      // Ensure we have at least 1 month if there's any time difference
+      if (months <= 0 && endDate > startDate) {
+        months = 1;
+      }
+      
+      setQuoteData(prev => ({ ...prev, overall_duration_months: Math.max(0, months) }));
     }
   };
 
@@ -468,7 +479,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
             </Button>
           </div>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 bg-white border shadow-lg z-50" align="start">
           <Calendar 
             mode="single" 
             selected={value || undefined} 

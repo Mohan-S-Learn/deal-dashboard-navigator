@@ -61,21 +61,27 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Dropdown: ({ value, onChange, children, ...props }) => (
-          <Select value={value?.toString()} onValueChange={(val) => onChange?.(new Date(parseInt(val, 10), 0))}>
-            <SelectTrigger className="h-7 w-fit border-0 p-1 focus:ring-0 focus:ring-offset-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {children}
-            </SelectContent>
-          </Select>
-        ),
-        Option: ({ value, children, ...props }) => (
-          <SelectItem value={value?.toString() || ""} {...props}>
-            {children}
-          </SelectItem>
-        ),
+        Dropdown: ({ value, onChange, children, ...props }) => {
+          const handleValueChange = (newValue: string) => {
+            if (onChange) {
+              const numValue = parseInt(newValue, 10);
+              onChange({
+                target: { value: numValue }
+              } as any);
+            }
+          };
+
+          return (
+            <Select value={value?.toString()} onValueChange={handleValueChange}>
+              <SelectTrigger className="h-7 w-fit border-0 p-1 focus:ring-0 focus:ring-offset-0 bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" className="bg-white border shadow-md z-50">
+                {children}
+              </SelectContent>
+            </Select>
+          );
+        },
       }}
       captionLayout="dropdown-buttons"
       fromYear={1900}
