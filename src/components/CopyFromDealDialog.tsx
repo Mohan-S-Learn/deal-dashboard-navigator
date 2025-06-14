@@ -67,6 +67,11 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
   const availableQuotes = selectedDealId ? mockQuotesForDeal[selectedDealId] || [] : [];
   const selectedQuote = availableQuotes.find(q => q.id === selectedQuoteId);
 
+  // Debug logging
+  console.log('Selected Deal ID:', selectedDealId);
+  console.log('Available Quotes:', availableQuotes);
+  console.log('Selected Deal:', selectedDeal);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedDealId && selectedQuoteId && newQuoteName.trim()) {
@@ -78,6 +83,7 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
   };
 
   const handleDealSelect = (dealId: string) => {
+    console.log('Deal selected:', dealId);
     setSelectedDealId(dealId);
     setSelectedQuoteId(''); // Reset quote selection when deal changes
     setNewQuoteName(''); // Reset name when deal changes
