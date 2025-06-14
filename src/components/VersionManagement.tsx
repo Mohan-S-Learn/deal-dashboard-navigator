@@ -12,6 +12,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Plus, Copy, FileSearch } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import CreateNewQuoteDialog from './CreateNewQuoteDialog';
+import CopyExistingQuoteDialog from './CopyExistingQuoteDialog';
+import CopyFromDealDialog from './CopyFromDealDialog';
 
 interface VersionManagementProps {
   dealId: string;
@@ -68,7 +72,11 @@ const formatCurrency = (amount: number) => {
 };
 
 const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
-  const [quoteVersions] = useState<QuoteVersion[]>(mockQuoteVersions);
+  const [quoteVersions, setQuoteVersions] = useState<QuoteVersion[]>(mockQuoteVersions);
+  const [createNewDialogOpen, setCreateNewDialogOpen] = useState(false);
+  const [copyExistingDialogOpen, setCopyExistingDialogOpen] = useState(false);
+  const [copyFromDealDialogOpen, setCopyFromDealDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -77,6 +85,69 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       case 'Archived': return 'bg-gray-100 text-gray-700 border-gray-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
+  };
+
+  const handleCreateNewQuote = (quoteName: string) => {
+    const newQuote: QuoteVersion = {
+      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
+      quoteName,
+      createdDate: new Date().toISOString().split('T')[0],
+      createdBy: 'Current User',
+      revenue: 0,
+      marginPercent: 0,
+      status: 'Draft'
+    };
+    
+    setQuoteVersions(prev => [...prev, newQuote]);
+    setCreateNewDialogOpen(false);
+    
+    toast({
+      title: "Quote Scenario Created",
+      description: `"${quoteName}" has been created successfully.`
+    });
+  };
+
+  const handleCopyExistingQuote = (selectedQuoteId: string, newQuoteName: string) => {
+    const originalQuote = quoteVersions.find(q => q.id === selectedQuoteId);
+    if (!originalQuote) return;
+
+    const newQuote: QuoteVersion = {
+      ...originalQuote,
+      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
+      quoteName: newQuoteName,
+      createdDate: new Date().toISOString().split('T')[0],
+      createdBy: 'Current User',
+      status: 'Draft'
+    };
+    
+    setQuoteVersions(prev => [...prev, newQuote]);
+    setCopyExistingDialogOpen(false);
+    
+    toast({
+      title: "Quote Scenario Copied",
+      description: `"${newQuoteName}" has been created from "${originalQuote.quoteName}".`
+    });
+  };
+
+  const handleCopyFromDeal = (dealId: string, quoteId: string, newQuoteName: string) => {
+    // This would typically fetch the quote data from the selected deal
+    const newQuote: QuoteVersion = {
+      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
+      quoteName: newQuoteName,
+      createdDate: new Date().toISOString().split('T')[0],
+      createdBy: 'Current User',
+      revenue: 0, // Would be copied from the source quote
+      marginPercent: 0, // Would be copied from the source quote
+      status: 'Draft'
+    };
+    
+    setQuoteVersions(prev => [...prev, newQuote]);
+    setCopyFromDealDialogOpen(false);
+    
+    toast({
+      title: "Quote Scenario Copied",
+      description: `"${newQuoteName}" has been copied from another deal.`
+    });
   };
 
   return (
@@ -104,6 +175,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button 
+                onClick={() => setCreateNewDialogOpen(true)}
                 className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Plus className="h-4 w-4" />
@@ -114,6 +186,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
               </Button>
               
               <Button 
+                onClick={() => setCopyExistingDialogOpen(true)}
                 variant="outline"
                 className="h-12 border-2 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 text-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
               >
@@ -125,6 +198,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
               </Button>
               
               <Button 
+                onClick={() => setCopyFromDealDialogOpen(true)}
                 variant="outline"
                 className="h-12 border-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2"
               >
@@ -187,6 +261,26 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
           </CardContent>
         </Card>
       </main>
+
+      {/* Dialogs */}
+      <CreateNewQuoteDialog
+        open={createNewDialogOpen}
+        onOpenChange={setCreateNewDialogOpen}
+        onCreateQuote={handleCreateNewQuote}
+      />
+
+      <CopyExistingQuoteDialog
+        open={copyExistingDialogOpen}
+        onOpenChange={setCopyExistingDialogOpen}
+        onCopyQuote={handleCopyExistingQuote}
+        quoteVersions={quoteVersions}
+      />
+
+      <CopyFromDealDialog
+        open={copyFromDealDialogOpen}
+        onOpenChange={setCopyFromDealDialogOpen}
+        onCopyFromDeal={handleCopyFromDeal}
+      />
     </div>
   );
 };
