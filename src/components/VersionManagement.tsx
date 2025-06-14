@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { mockDeals } from '../data/mockData';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { ArrowLeft, FileText, DollarSign, User, Plus, Copy, FileSearch } from 'lucide-react';
+import { FileText, DollarSign, User, Plus, Copy, FileSearch } from 'lucide-react';
 
 interface VersionManagementProps {
   dealId: string;
@@ -111,24 +110,13 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Deal Info Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onBack}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{deal.name}</h1>
-                <p className="text-sm text-gray-500">Deal ID: {deal.id} - Version Management</p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{deal.name}</h2>
+              <p className="text-sm text-gray-500">Deal ID: {deal.id}</p>
             </div>
             <Badge className={getStatusColor(deal.status)}>
               {deal.status}

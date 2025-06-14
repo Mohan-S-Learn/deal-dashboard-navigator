@@ -13,7 +13,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Building2, LogOut, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
+import { LogOut, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
 
 interface DashboardProps {
   onDealClick: (dealId: string) => void;
@@ -38,20 +38,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">IT Services Portal</h1>
-                <p className="text-sm text-gray-500">Deal Management Dashboard</p>
-              </div>
-            </div>
-            
+      {/* Header with user info and logout */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-end">
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">{user?.name}</p>
@@ -69,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
