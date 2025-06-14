@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -54,6 +53,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   }, [quoteData.knowledge_transition_start_date, quoteData.steady_state_end_date]);
 
   const handleDateChange = (field: keyof QuoteData, date: Date | undefined) => {
+    console.log('Date change:', field, date);
     setQuoteData(prev => ({ ...prev, [field]: date || null }));
   };
 
@@ -120,6 +120,13 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   };
 
   const handleSaveData = () => {
+    console.log('Saving data:', {
+      quoteData,
+      geographyTableData,
+      categoryTableData,
+      volumeDiscounts
+    });
+
     // Convert geography table data to selected geography IDs
     const geographyIds = geographyTableData
       .filter(row => row.region && row.country && row.city)
@@ -139,13 +146,6 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
       level2: categoryTableData[0].level2,
       level3: categoryTableData[0].level3,
     } : selectedCategories;
-
-    console.log('Saving data with:', {
-      geographyIds,
-      categoryData,
-      geographyTableData,
-      categoryTableData
-    });
 
     saveData(
       dealId,

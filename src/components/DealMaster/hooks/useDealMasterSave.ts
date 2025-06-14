@@ -16,14 +16,24 @@ export const useDealMasterSave = () => {
     volumeDiscounts: VolumeDiscountRange[]
   ) => {
     try {
+      console.log('Saving quote data:', quoteData);
+      
+      // Format dates properly - ensure they're valid dates before converting
+      const formatDate = (date: Date | null) => {
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+          return null;
+        }
+        return date.toISOString().split('T')[0];
+      };
+
       // Update quote data
       const { error: quoteError } = await supabase
         .from('Quotes')
         .update({
-          knowledge_transition_start_date: quoteData.knowledge_transition_start_date?.toISOString().split('T')[0],
-          knowledge_transition_end_date: quoteData.knowledge_transition_end_date?.toISOString().split('T')[0],
-          steady_state_start_date: quoteData.steady_state_start_date?.toISOString().split('T')[0],
-          steady_state_end_date: quoteData.steady_state_end_date?.toISOString().split('T')[0],
+          knowledge_transition_start_date: formatDate(quoteData.knowledge_transition_start_date),
+          knowledge_transition_end_date: formatDate(quoteData.knowledge_transition_end_date),
+          steady_state_start_date: formatDate(quoteData.steady_state_start_date),
+          steady_state_end_date: formatDate(quoteData.steady_state_end_date),
           overall_duration_months: quoteData.overall_duration_months,
           market_id: quoteData.market_id,
           deal_discount_amount: quoteData.deal_discount_amount,
@@ -38,7 +48,10 @@ export const useDealMasterSave = () => {
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName);
 
-      if (quoteError) throw quoteError;
+      if (quoteError) {
+        console.error('Quote update error:', quoteError);
+        throw quoteError;
+      }
 
       // Save resource types
       await supabase.from('QuoteResourceType').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
@@ -49,7 +62,10 @@ export const useDealMasterSave = () => {
           resource_type_id: rtId
         }));
         const { error: rtError } = await supabase.from('QuoteResourceType').insert(resourceTypeInserts);
-        if (rtError) throw rtError;
+        if (rtError) {
+          console.error('Resource type insert error:', rtError);
+          throw rtError;
+        }
       }
 
       // Save geographies
@@ -61,7 +77,10 @@ export const useDealMasterSave = () => {
           geography_id: gId
         }));
         const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
-        if (geoError) throw geoError;
+        if (geoError) {
+          console.error('Geography insert error:', geoError);
+          throw geoError;
+        }
       }
 
       // Save service categories
@@ -74,7 +93,10 @@ export const useDealMasterSave = () => {
           category_level_2_id: selectedCategories.level2,
           category_level_3_id: selectedCategories.level3,
         });
-        if (catError) throw catError;
+        if (catError) {
+          console.error('Category insert error:', catError);
+          throw catError;
+        }
       }
 
       // Save volume discounts
@@ -88,7 +110,10 @@ export const useDealMasterSave = () => {
           discount_percent: vd.discount_percent
         }));
         const { error: volError } = await supabase.from('VolumeDiscount').insert(volumeInserts);
-        if (volError) throw volError;
+        if (volError) {
+          console.error('Volume discount insert error:', volError);
+          throw volError;
+        }
       }
 
       toast({
