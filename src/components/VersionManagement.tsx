@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ interface VersionManagementProps {
 
 interface QuoteVersion {
   id: string;
+  quoteId: string | null;
   quoteName: string;
   createdDate: string;
   createdBy: string;
@@ -78,6 +80,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
       const formattedQuotes = data.map((quote, index) => ({
         id: `${quote.Deal_Id}-${quote.Quote_Name}-${index}`, // Create unique ID
+        quoteId: quote.Quote_ID,
         quoteName: quote.Quote_Name,
         createdDate: quote.Created_Date || new Date().toISOString().split('T')[0],
         createdBy: quote.Created_By || 'Unknown',
@@ -120,11 +123,15 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
           counter++;
         }
       }
+
+      // Generate a unique Quote_ID
+      const uniqueQuoteId = `${dealId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const { error } = await supabase
         .from('Quotes')
         .insert({
           Deal_Id: dealId,
+          Quote_ID: uniqueQuoteId,
           Quote_Name: uniqueQuoteName,
           Created_Date: quote.createdDate,
           Created_By: quote.createdBy,
@@ -167,6 +174,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
   const handleCreateNewQuote = async (quoteName: string) => {
     const newQuote = {
+      quoteId: null,
       quoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
@@ -201,6 +209,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
     }
 
     const newQuote = {
+      quoteId: null,
       quoteName: newQuoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
@@ -244,6 +253,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
       }
 
       const newQuote = {
+        quoteId: null,
         quoteName: newQuoteName,
         createdDate: new Date().toISOString().split('T')[0],
         createdBy: 'Current User',
@@ -364,6 +374,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50/50 hover:bg-gray-50/70">
+                      <TableHead className="font-bold text-gray-700 py-4">Quote ID</TableHead>
                       <TableHead className="font-bold text-gray-700 py-4">Quote Name</TableHead>
                       <TableHead className="font-bold text-gray-700 py-4">Created Date</TableHead>
                       <TableHead className="font-bold text-gray-700 py-4">Created By</TableHead>
@@ -375,6 +386,11 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
                   <TableBody>
                     {quoteVersions.map((quote, index) => (
                       <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                        <TableCell className="py-4">
+                          <div className="font-mono text-sm text-gray-600">
+                            {quote.quoteId || 'N/A'}
+                          </div>
+                        </TableCell>
                         <TableCell className="py-4">
                           <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
                           <div className="text-sm text-gray-500 font-mono">{quote.id}</div>
