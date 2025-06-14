@@ -11,8 +11,8 @@ export const useDealMasterSave = () => {
     quoteName: string,
     quoteData: QuoteData,
     selectedResourceTypes: number[],
-    selectedGeographies: number[],
-    selectedCategories: SelectedCategories,
+    geographyTableData: any[], // Changed to accept table data directly
+    categoryTableData: any[], // Changed to accept table data directly
     volumeDiscounts: VolumeDiscountRange[]
   ) => {
     try {
@@ -20,6 +20,8 @@ export const useDealMasterSave = () => {
       console.log('Deal ID:', dealId);
       console.log('Quote Name:', quoteName);
       console.log('Quote data to save:', quoteData);
+      console.log('Geography table data:', geographyTableData);
+      console.log('Category table data:', categoryTableData);
       
       // Enhanced date formatting with better validation
       const formatDate = (date: Date | null) => {
@@ -39,6 +41,20 @@ export const useDealMasterSave = () => {
             return null;
           }
           date = parsedDate;
+        }
+        
+        // Handle Date objects that have custom structure (from date pickers)
+        if (date && typeof date === 'object' && '_type' in date && date._type === 'Date') {
+          console.log('Date has custom structure, extracting value');
+          const dateValue = (date as any).value;
+          if (dateValue && dateValue.iso) {
+            date = new Date(dateValue.iso);
+          } else if (dateValue && typeof dateValue === 'number') {
+            date = new Date(dateValue);
+          } else {
+            console.log('Cannot parse custom date structure:', date);
+            return null;
+          }
         }
         
         // Check if it's a valid Date object
@@ -113,11 +129,56 @@ export const useDealMasterSave = () => {
         console.log('Resource types saved successfully');
       }
 
-      // Save geographies with enhanced logging
-      console.log('Saving geographies:', selectedGeographies);
+      // Load all geographies to match against table data
+      console.log('Loading all geographies for matching...');
+      const { data: allGeographies, error: geoLoadError } = await supabase
+        .from('Geography')
+        .select('*');
+      
+      if (geoLoadError) {
+        console.error('Error loading geographies:', geoLoadError);
+        throw geoLoadError;
+      }
+
+      // Process geography table data to get geography IDs
+      console.log('Processing geography table data:', geographyTableData);
+      const geographyIds: number[] = [];
+      
+      geographyTableData.forEach((row, index) => {
+        console.log(`Processing geography row ${index}:`, row);
+        
+        if (row.region && row.country && row.city) {
+          // Try exact match first
+          let geography = allGeographies?.find(g => 
+            g.region?.trim().toLowerCase() === row.region.trim().toLowerCase() && 
+            g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
+            g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
+          );
+
+          // If no exact match, try without region
+          if (!geography) {
+            geography = allGeographies?.find(g => 
+              g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
+              g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
+            );
+          }
+
+          if (geography) {
+            console.log(`Found geography match for row ${index}:`, geography);
+            geographyIds.push(geography.id);
+          } else {
+            console.warn(`No geography found for row ${index}:`, row);
+          }
+        } else {
+          console.warn(`Incomplete geography data in row ${index}:`, row);
+        }
+      });
+
+      // Save geographies
+      console.log('Saving geographies with IDs:', geographyIds);
       await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
-      if (selectedGeographies.length > 0) {
-        const geographyInserts = selectedGeographies.map(gId => ({
+      if (geographyIds.length > 0) {
+        const geographyInserts = geographyIds.map(gId => ({
           Deal_Id: dealId,
           Quote_Name: quoteName,
           geography_id: gId
@@ -130,29 +191,42 @@ export const useDealMasterSave = () => {
         }
         console.log('Geographies saved successfully');
       } else {
-        console.log('No geographies to save');
+        console.log('No valid geographies to save');
       }
 
-      // Save service categories with enhanced logging
-      console.log('Saving service categories:', selectedCategories);
+      // Process all service category rows - save each one individually
+      console.log('Processing service category table data:', categoryTableData);
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
-      if (selectedCategories.level1 || selectedCategories.level2 || selectedCategories.level3) {
-        const categoryInsert = {
-          Deal_Id: dealId,
-          Quote_Name: quoteName,
-          category_level_1_id: selectedCategories.level1,
-          category_level_2_id: selectedCategories.level2,
-          category_level_3_id: selectedCategories.level3,
-        };
-        console.log('Inserting service category:', categoryInsert);
-        const { error: catError } = await supabase.from('QuoteServiceCategory').insert(categoryInsert);
+      
+      const validCategoryInserts: any[] = [];
+      categoryTableData.forEach((row, index) => {
+        console.log(`Processing category row ${index}:`, row);
+        
+        if (row.level1) {
+          const categoryInsert = {
+            Deal_Id: dealId,
+            Quote_Name: quoteName,
+            category_level_1_id: row.level1,
+            category_level_2_id: row.level2 || null,
+            category_level_3_id: row.level3 || null,
+          };
+          validCategoryInserts.push(categoryInsert);
+          console.log(`Added category insert for row ${index}:`, categoryInsert);
+        } else {
+          console.warn(`No level1 category in row ${index}:`, row);
+        }
+      });
+
+      if (validCategoryInserts.length > 0) {
+        console.log('Inserting service categories:', validCategoryInserts);
+        const { error: catError } = await supabase.from('QuoteServiceCategory').insert(validCategoryInserts);
         if (catError) {
           console.error('Category insert error:', catError);
           throw catError;
         }
         console.log('Service categories saved successfully');
       } else {
-        console.log('No categories to save');
+        console.log('No valid categories to save');
       }
 
       // Save volume discounts

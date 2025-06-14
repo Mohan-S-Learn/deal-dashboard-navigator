@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -124,82 +123,15 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     console.log('=== SAVE DATA DEBUG ===');
     console.log('Raw geography table data:', geographyTableData);
     console.log('Raw category table data:', categoryTableData);
-    console.log('Available geographies:', geographies);
-    console.log('Quote data:', quoteData);
 
-    // Convert geography table data to geography IDs with better matching
-    const geographyIds: number[] = [];
-    geographyTableData.forEach((row, index) => {
-      console.log(`Processing geography row ${index}:`, row);
-      
-      if (row.region && row.country && row.city) {
-        // Try exact match first
-        let geography = geographies.find(g => 
-          g.region?.trim().toLowerCase() === row.region.trim().toLowerCase() && 
-          g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
-          g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
-        );
-
-        // If no exact match, try without region (in case region is null in DB)
-        if (!geography) {
-          geography = geographies.find(g => 
-            g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
-            g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
-          );
-        }
-
-        if (geography) {
-          console.log(`Found geography match for row ${index}:`, geography);
-          geographyIds.push(geography.id);
-        } else {
-          console.warn(`No geography found for row ${index}:`, row);
-          console.log('Available geographies for this country:', 
-            geographies.filter(g => g.country?.toLowerCase() === row.country.toLowerCase())
-          );
-        }
-      } else {
-        console.warn(`Incomplete geography data in row ${index}:`, row);
-      }
-    });
-
-    // Process ALL category rows - save multiple category combinations
-    const allCategorySelections: SelectedCategories[] = [];
-    categoryTableData.forEach((row, index) => {
-      console.log(`Processing category row ${index}:`, row);
-      
-      if (row.level1) {
-        const categorySelection: SelectedCategories = {
-          level1: row.level1,
-          level2: row.level2 || null,
-          level3: row.level3 || null,
-        };
-        allCategorySelections.push(categorySelection);
-        console.log(`Added category selection ${index}:`, categorySelection);
-      } else {
-        console.warn(`No level1 category in row ${index}:`, row);
-      }
-    });
-
-    console.log('=== CONVERSION RESULTS ===');
-    console.log('Converted geography IDs:', geographyIds);
-    console.log('All category selections:', allCategorySelections);
-    console.log('Volume discounts:', volumeDiscounts);
-
-    // For now, save the first category selection (API limitation)
-    // TODO: Update API to handle multiple category selections
-    const primaryCategorySelection = allCategorySelections.length > 0 
-      ? allCategorySelections[0] 
-      : selectedCategories;
-
-    console.log('Saving with primary category selection:', primaryCategorySelection);
-
+    // Pass the table data directly to the save function
     saveData(
       dealId,
       quoteName,
       quoteData,
       selectedResourceTypes,
-      geographyIds,
-      primaryCategorySelection,
+      geographyTableData, // Pass table data directly
+      categoryTableData,  // Pass table data directly
       volumeDiscounts
     );
   };
