@@ -34,8 +34,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onScenarioBuilderClick 
 }) => {
   const handleScenarioBuilderClick = () => {
+    console.log('DashboardHeader: Scenario Builder button clicked');
+    console.log('DashboardHeader: Deals available:', deals.length);
     if (deals.length > 0) {
+      console.log('DashboardHeader: Calling onScenarioBuilderClick');
       onScenarioBuilderClick();
+    } else {
+      console.log('DashboardHeader: No deals available, button should be disabled');
     }
   };
 
