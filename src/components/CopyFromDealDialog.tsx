@@ -161,7 +161,7 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[95vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-visible">
         <DialogHeader>
           <DialogTitle>Copy Quote from Another Deal</DialogTitle>
           <DialogDescription>
@@ -171,32 +171,23 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 py-4">
             {/* Deal Selection */}
-            <div className="space-y-3">
+            <div className="space-y-3 relative z-50">
               <Label className="text-base font-semibold">Select Deal</Label>
               <Select value={selectedDealId} onValueChange={handleDealSelect}>
-                <SelectTrigger className="w-full h-auto min-h-[3rem] p-3">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Choose a deal from My Deals..." />
                 </SelectTrigger>
-                <SelectContent 
-                  className="bg-white border shadow-2xl z-[100] max-h-[350px] w-full min-w-[600px]"
-                  position="popper"
-                  side="bottom"
-                  align="start"
-                >
+                <SelectContent className="max-h-[300px] z-[9999]">
                   {mockDeals.map((deal) => (
-                    <SelectItem 
-                      key={deal.id} 
-                      value={deal.id} 
-                      className="cursor-pointer p-0 focus:bg-blue-50 data-[highlighted]:bg-blue-50"
-                    >
-                      <div className="w-full p-4 border-b border-gray-100 last:border-b-0">
-                        <div className="font-semibold text-gray-900 text-base mb-2">{deal.name}</div>
-                        <div className="text-sm text-gray-600 mb-3">{deal.client}</div>
+                    <SelectItem key={deal.id} value={deal.id}>
+                      <div className="w-full py-2">
+                        <div className="font-semibold text-gray-900 mb-1">{deal.name}</div>
+                        <div className="text-sm text-gray-600 mb-2">{deal.client}</div>
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-green-700 text-lg">{formatCurrency(deal.value)}</span>
-                          <div className="flex items-center space-x-3">
+                          <span className="font-bold text-green-700">{formatCurrency(deal.value)}</span>
+                          <div className="flex items-center space-x-2">
                             <span className="text-xs text-gray-500">{deal.quoteCount} quotes</span>
-                            <Badge className={`${getStatusColor(deal.status)} text-xs font-medium`}>
+                            <Badge className={`${getStatusColor(deal.status)} text-xs`}>
                               {deal.status}
                             </Badge>
                           </div>
@@ -210,30 +201,21 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
             {/* Quote Selection */}
             {selectedDeal && availableQuotes.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 relative z-40">
                 <Label className="text-base font-semibold">
                   Select Quote from {selectedDeal.name}
                 </Label>
                 <Select value={selectedQuoteId} onValueChange={setSelectedQuoteId}>
-                  <SelectTrigger className="w-full h-auto min-h-[2.5rem] p-3">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Choose a quote scenario..." />
                   </SelectTrigger>
-                  <SelectContent 
-                    className="bg-white border shadow-2xl z-[100] max-h-[300px] w-full min-w-[500px]"
-                    position="popper"
-                    side="bottom"
-                    align="start"
-                  >
+                  <SelectContent className="max-h-[250px] z-[9998]">
                     {availableQuotes.map((quote) => (
-                      <SelectItem 
-                        key={quote.id} 
-                        value={quote.id} 
-                        className="cursor-pointer p-0 focus:bg-blue-50 data-[highlighted]:bg-blue-50"
-                      >
-                        <div className="w-full p-4 border-b border-gray-100 last:border-b-0">
-                          <div className="font-medium text-gray-900 text-base mb-2">{quote.name}</div>
+                      <SelectItem key={quote.id} value={quote.id}>
+                        <div className="w-full py-2">
+                          <div className="font-medium text-gray-900 mb-1">{quote.name}</div>
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-green-700 text-lg">{formatCurrency(quote.revenue)}</span>
+                            <span className="font-bold text-green-700">{formatCurrency(quote.revenue)}</span>
                             <span className="text-sm text-indigo-600 font-semibold">{quote.margin}% margin</span>
                           </div>
                         </div>
@@ -255,7 +237,7 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
                   value={newQuoteName}
                   onChange={(e) => setNewQuoteName(e.target.value)}
                   placeholder={`Copy of ${selectedQuote.name}`}
-                  className="w-full p-3"
+                  className="w-full"
                 />
               </div>
             )}
