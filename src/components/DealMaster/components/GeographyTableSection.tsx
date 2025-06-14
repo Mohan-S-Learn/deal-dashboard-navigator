@@ -25,6 +25,8 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
 
   // Pass data back to parent whenever it changes
   useEffect(() => {
+    console.log('=== GEOGRAPHY DATA CHANGE ===');
+    console.log('Geography - current selectedRows:', JSON.stringify(selectedRows, null, 2));
     console.log('Geography - sending data to parent:', selectedRows);
     onDataChange(selectedRows);
   }, [selectedRows, onDataChange]);
@@ -59,6 +61,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   };
 
   const updateRow = (id: string, field: keyof SelectedGeographyRow, value: string) => {
+    console.log(`=== GEOGRAPHY ROW UPDATE ===`);
     console.log(`Geography - updating row ${id}, field ${field}, value:`, value);
     
     setSelectedRows(prev => {
@@ -74,13 +77,13 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
             updatedRow.city = '';
           }
           
-          console.log(`Geography - updated row:`, updatedRow);
+          console.log(`Geography - updated row result:`, updatedRow);
           return updatedRow;
         }
         return row;
       });
       
-      console.log('Geography - all rows after update:', updatedRows);
+      console.log('Geography - all rows after update:', JSON.stringify(updatedRows, null, 2));
       return updatedRows;
     });
   };
@@ -92,11 +95,13 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
       country: '',
       city: ''
     }));
+    console.log('Geography - adding new rows:', newRows);
     setSelectedRows(prev => [...prev, ...newRows]);
   };
 
   const removeRow = (id: string) => {
     if (selectedRows.length > 1) {
+      console.log('Geography - removing row:', id);
       setSelectedRows(prev => prev.filter(row => row.id !== id));
     }
   };
@@ -104,6 +109,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   const copyFirstRowToAll = () => {
     if (selectedRows.length > 0) {
       const firstRow = selectedRows[0];
+      console.log('Geography - copying first row to all:', firstRow);
       setSelectedRows(prev => prev.map((row, index) => 
         index === 0 ? row : {
           ...row,

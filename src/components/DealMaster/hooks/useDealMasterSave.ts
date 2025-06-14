@@ -11,8 +11,8 @@ export const useDealMasterSave = () => {
     quoteName: string,
     quoteData: QuoteData,
     selectedResourceTypes: number[],
-    geographyTableData: any[], // Changed to accept table data directly
-    categoryTableData: any[], // Changed to accept table data directly
+    geographyTableData: any[],
+    categoryTableData: any[],
     volumeDiscounts: VolumeDiscountRange[]
   ) => {
     try {
@@ -20,8 +20,8 @@ export const useDealMasterSave = () => {
       console.log('Deal ID:', dealId);
       console.log('Quote Name:', quoteName);
       console.log('Quote data to save:', quoteData);
-      console.log('Geography table data:', geographyTableData);
-      console.log('Category table data:', categoryTableData);
+      console.log('Geography table data received:', geographyTableData);
+      console.log('Category table data received:', categoryTableData);
       
       // Enhanced date formatting with better validation
       const formatDate = (date: Date | null) => {
@@ -129,104 +129,115 @@ export const useDealMasterSave = () => {
         console.log('Resource types saved successfully');
       }
 
-      // Load all geographies to match against table data
-      console.log('Loading all geographies for matching...');
-      const { data: allGeographies, error: geoLoadError } = await supabase
-        .from('Geography')
-        .select('*');
+      // Process Geography Table Data
+      console.log('=== PROCESSING GEOGRAPHY DATA ===');
+      console.log('Raw geography table data:', JSON.stringify(geographyTableData, null, 2));
       
-      if (geoLoadError) {
-        console.error('Error loading geographies:', geoLoadError);
-        throw geoLoadError;
-      }
+      // Delete existing geography records
+      await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
+      console.log('Deleted existing geography records');
 
-      // Process geography table data to get geography IDs
-      console.log('Processing geography table data:', geographyTableData);
-      const geographyIds: number[] = [];
-      
-      geographyTableData.forEach((row, index) => {
-        console.log(`Processing geography row ${index}:`, row);
+      // Filter out empty geography rows and get their IDs
+      const validGeographyRows = geographyTableData.filter(row => {
+        const hasData = row && row.region && row.country && row.city;
+        console.log('Geography row validation:', row, 'hasData:', hasData);
+        return hasData;
+      });
+
+      console.log('Valid geography rows:', validGeographyRows);
+
+      if (validGeographyRows.length > 0) {
+        // Load all geographies to find matching IDs
+        const { data: allGeographies, error: geoLoadError } = await supabase
+          .from('Geography')
+          .select('*');
         
-        if (row.region && row.country && row.city) {
-          // Try exact match first
-          let geography = allGeographies?.find(g => 
+        if (geoLoadError) {
+          console.error('Error loading geographies:', geoLoadError);
+          throw geoLoadError;
+        }
+
+        console.log('Loaded geographies from database:', allGeographies);
+
+        const geographyInserts: any[] = [];
+
+        validGeographyRows.forEach((row, index) => {
+          console.log(`Processing geography row ${index}:`, row);
+          
+          // Find matching geography by region, country, and city
+          const geography = allGeographies?.find(g => 
             g.region?.trim().toLowerCase() === row.region.trim().toLowerCase() && 
             g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
             g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
           );
 
-          // If no exact match, try without region
-          if (!geography) {
-            geography = allGeographies?.find(g => 
-              g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
-              g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
-            );
-          }
-
           if (geography) {
             console.log(`Found geography match for row ${index}:`, geography);
-            geographyIds.push(geography.id);
+            geographyInserts.push({
+              Deal_Id: dealId,
+              Quote_Name: quoteName,
+              geography_id: geography.id
+            });
           } else {
             console.warn(`No geography found for row ${index}:`, row);
+            console.log('Available geographies:', allGeographies?.map(g => ({ id: g.id, region: g.region, country: g.country, city: g.city })));
           }
-        } else {
-          console.warn(`Incomplete geography data in row ${index}:`, row);
-        }
-      });
+        });
 
-      // Save geographies
-      console.log('Saving geographies with IDs:', geographyIds);
-      await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
-      if (geographyIds.length > 0) {
-        const geographyInserts = geographyIds.map(gId => ({
-          Deal_Id: dealId,
-          Quote_Name: quoteName,
-          geography_id: gId
-        }));
-        console.log('Inserting geographies:', geographyInserts);
-        const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
-        if (geoError) {
-          console.error('Geography insert error:', geoError);
-          throw geoError;
+        if (geographyInserts.length > 0) {
+          console.log('Inserting geography records:', geographyInserts);
+          const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
+          if (geoError) {
+            console.error('Geography insert error:', geoError);
+            throw geoError;
+          }
+          console.log('Geography records saved successfully');
+        } else {
+          console.log('No valid geography matches found to save');
         }
-        console.log('Geographies saved successfully');
       } else {
-        console.log('No valid geographies to save');
+        console.log('No valid geography rows to process');
       }
 
-      // Process all service category rows - save each one individually
-      console.log('Processing service category table data:', categoryTableData);
-      await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
+      // Process Service Category Table Data
+      console.log('=== PROCESSING SERVICE CATEGORY DATA ===');
+      console.log('Raw category table data:', JSON.stringify(categoryTableData, null, 2));
       
-      const validCategoryInserts: any[] = [];
-      categoryTableData.forEach((row, index) => {
-        console.log(`Processing category row ${index}:`, row);
-        
-        if (row.level1) {
-          const categoryInsert = {
-            Deal_Id: dealId,
-            Quote_Name: quoteName,
-            category_level_1_id: row.level1,
-            category_level_2_id: row.level2 || null,
-            category_level_3_id: row.level3 || null,
-          };
-          validCategoryInserts.push(categoryInsert);
-          console.log(`Added category insert for row ${index}:`, categoryInsert);
-        } else {
-          console.warn(`No level1 category in row ${index}:`, row);
-        }
+      // Delete existing category records
+      await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
+      console.log('Deleted existing category records');
+
+      // Filter out incomplete category rows
+      const validCategoryRows = categoryTableData.filter(row => {
+        const hasLevel1 = row && row.level1 && row.level1 !== null && row.level1 !== '';
+        console.log('Category row validation:', row, 'hasLevel1:', hasLevel1);
+        return hasLevel1;
       });
 
-      if (validCategoryInserts.length > 0) {
-        console.log('Inserting service categories:', validCategoryInserts);
-        const { error: catError } = await supabase.from('QuoteServiceCategory').insert(validCategoryInserts);
+      console.log('Valid category rows:', validCategoryRows);
+
+      if (validCategoryRows.length > 0) {
+        const categoryInserts = validCategoryRows.map((row, index) => {
+          const insert = {
+            Deal_Id: dealId,
+            Quote_Name: quoteName,
+            category_level_1_id: parseInt(row.level1.toString()),
+            category_level_2_id: row.level2 && row.level2 !== null && row.level2 !== '' ? parseInt(row.level2.toString()) : null,
+            category_level_3_id: row.level3 && row.level3 !== null && row.level3 !== '' ? parseInt(row.level3.toString()) : null,
+          };
+          console.log(`Category insert for row ${index}:`, insert);
+          return insert;
+        });
+
+        console.log('Inserting category records:', categoryInserts);
+        const { error: catError } = await supabase.from('QuoteServiceCategory').insert(categoryInserts);
         if (catError) {
           console.error('Category insert error:', catError);
           throw catError;
         }
-        console.log('Service categories saved successfully');
+        console.log('Service category records saved successfully');
       } else {
-        console.log('No valid categories to save');
+        console.log('No valid category rows to process');
       }
 
       // Save volume discounts
