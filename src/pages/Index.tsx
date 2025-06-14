@@ -1,13 +1,47 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import { AuthProvider } from '../contexts/AuthContext';
+import Login from '../components/Login';
+import Dashboard from '../components/Dashboard';
+import VersionManagement from '../components/VersionManagement';
+
+type View = 'login' | 'dashboard' | 'version-management';
 
 const Index = () => {
+  const [currentView, setCurrentView] = useState<View>('login');
+  const [selectedDealId, setSelectedDealId] = useState<string>('');
+
+  const handleLogin = () => {
+    setCurrentView('dashboard');
+  };
+
+  const handleDealClick = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setCurrentView('version-management');
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView('dashboard');
+    setSelectedDealId('');
+  };
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'login':
+        return <Login onLogin={handleLogin} />;
+      case 'dashboard':
+        return <Dashboard onDealClick={handleDealClick} />;
+      case 'version-management':
+        return <VersionManagement dealId={selectedDealId} onBack={handleBackToDashboard} />;
+      default:
+        return <Login onLogin={handleLogin} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <AuthProvider>
+      {renderCurrentView()}
+    </AuthProvider>
   );
 };
 
