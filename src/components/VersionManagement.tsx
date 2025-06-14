@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +57,8 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
   const loadQuotes = async () => {
     try {
       setLoading(true);
+      console.log('Loading quotes for dealId:', dealId);
+      
       const { data, error } = await supabase
         .from('Quotes')
         .select('*')
@@ -73,8 +74,10 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         return;
       }
 
-      const formattedQuotes = data.map(quote => ({
-        id: quote.Quote_Name, // Using Quote_Name as ID for now
+      console.log('Raw quotes data:', data);
+
+      const formattedQuotes = data.map((quote, index) => ({
+        id: `${quote.Deal_Id}-${quote.Quote_Name}-${index}`, // Create unique ID
         quoteName: quote.Quote_Name,
         createdDate: quote.Created_Date || new Date().toISOString().split('T')[0],
         createdBy: quote.Created_By || 'Unknown',
@@ -83,6 +86,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         status: (quote.Status || 'Draft') as 'Draft' | 'Active' | 'Archived'
       }));
 
+      console.log('Formatted quotes:', formattedQuotes);
       setQuoteVersions(formattedQuotes);
     } catch (error) {
       console.error('Error loading quotes:', error);
@@ -98,11 +102,30 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
   const saveQuoteToDatabase = async (quote: Omit<QuoteVersion, 'id'>) => {
     try {
+      console.log('Saving quote to database:', quote);
+      
+      // Generate a unique quote name if it already exists
+      const existingQuotes = await supabase
+        .from('Quotes')
+        .select('Quote_Name')
+        .eq('Deal_Id', dealId);
+      
+      let uniqueQuoteName = quote.quoteName;
+      let counter = 1;
+      
+      if (existingQuotes.data) {
+        const existingNames = existingQuotes.data.map(q => q.Quote_Name);
+        while (existingNames.includes(uniqueQuoteName)) {
+          uniqueQuoteName = `${quote.quoteName} (${counter})`;
+          counter++;
+        }
+      }
+      
       const { error } = await supabase
         .from('Quotes')
         .insert({
           Deal_Id: dealId,
-          Quote_Name: quote.quoteName,
+          Quote_Name: uniqueQuoteName,
           Created_Date: quote.createdDate,
           Created_By: quote.createdBy,
           Revenue: quote.revenue,
@@ -114,12 +137,13 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         console.error('Error saving quote:', error);
         toast({
           title: "Error",
-          description: "Failed to save quote to database",
+          description: `Failed to save quote: ${error.message}`,
           variant: "destructive"
         });
         return false;
       }
 
+      console.log('Quote saved successfully with name:', uniqueQuoteName);
       return true;
     } catch (error) {
       console.error('Error saving quote:', error);
@@ -164,8 +188,17 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
   };
 
   const handleCopyExistingQuote = async (selectedQuoteId: string, newQuoteName: string) => {
+    console.log('Copying quote with ID:', selectedQuoteId);
     const originalQuote = quoteVersions.find(q => q.id === selectedQuoteId);
-    if (!originalQuote) return;
+    if (!originalQuote) {
+      console.error('Original quote not found:', selectedQuoteId);
+      toast({
+        title: "Error",
+        description: "Original quote not found",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const newQuote = {
       quoteName: newQuoteName,
@@ -191,6 +224,8 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
   const handleCopyFromDeal = async (dealId: string, quoteId: string, newQuoteName: string) => {
     // Load the source quote from database
     try {
+      console.log('Copying from deal:', dealId, 'quote:', quoteId);
+      
       const { data, error } = await supabase
         .from('Quotes')
         .select('*')
@@ -199,6 +234,7 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
         .single();
 
       if (error) {
+        console.error('Error finding source quote:', error);
         toast({
           title: "Error",
           description: "Failed to find the source quote",
