@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -12,6 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CopyFromDealDialogProps {
   open: boolean;
@@ -155,7 +161,7 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Copy Quote from Another Deal</DialogTitle>
           <DialogDescription>
@@ -165,88 +171,57 @@ const CopyFromDealDialog: React.FC<CopyFromDealDialogProps> = ({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6 py-4">
             {/* Deal Selection */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">Select Deal from My Deals</Label>
-              <div className="space-y-2 max-h-60 overflow-y-auto border rounded-md p-3 bg-gray-50">
-                {mockDeals.map((deal) => (
-                  <div
-                    key={deal.id}
-                    className={`p-4 rounded-lg cursor-pointer border-2 transition-all duration-200 ${
-                      selectedDealId === deal.id 
-                        ? 'bg-blue-50 border-blue-300 shadow-md' 
-                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleDealSelect(deal.id)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="radio"
-                        name="selectedDeal"
-                        value={deal.id}
-                        checked={selectedDealId === deal.id}
-                        onChange={() => handleDealSelect(deal.id)}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold text-gray-900">{deal.name}</div>
-                            <div className="text-sm text-gray-600">{deal.client}</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-green-700">{formatCurrency(deal.value)}</div>
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Select Deal</Label>
+              <Select value={selectedDealId} onValueChange={handleDealSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a deal..." />
+                </SelectTrigger>
+                <SelectContent className="bg-white border shadow-lg">
+                  {mockDeals.map((deal) => (
+                    <SelectItem key={deal.id} value={deal.id} className="cursor-pointer">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900">{deal.name}</div>
+                          <div className="text-sm text-gray-600">{deal.client}</div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="font-bold text-green-700">{formatCurrency(deal.value)}</span>
                             <Badge className={`${getStatusColor(deal.status)} text-xs`}>
                               {deal.status}
                             </Badge>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {deal.quoteCount} quote scenario{deal.quoteCount !== 1 ? 's' : ''} • {deal.id}
-                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Quote Selection */}
             {selectedDeal && availableQuotes.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Label className="text-base font-semibold">Select Quote from {selectedDeal.name}</Label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-gray-50">
-                  {availableQuotes.map((quote) => (
-                    <div
-                      key={quote.id}
-                      className={`p-3 rounded-lg cursor-pointer border-2 transition-all duration-200 ${
-                        selectedQuoteId === quote.id 
-                          ? 'bg-blue-50 border-blue-300 shadow-md' 
-                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                      }`}
-                      onClick={() => setSelectedQuoteId(quote.id)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="radio"
-                          name="selectedQuote"
-                          value={quote.id}
-                          checked={selectedQuoteId === quote.id}
-                          onChange={() => setSelectedQuoteId(quote.id)}
-                          className="h-4 w-4 text-blue-600"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
+                <Select value={selectedQuoteId} onValueChange={setSelectedQuoteId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a quote..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border shadow-lg">
+                    {availableQuotes.map((quote) => (
+                      <SelectItem key={quote.id} value={quote.id} className="cursor-pointer">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex-1">
                             <div className="font-medium text-gray-900">{quote.name}</div>
-                            <div className="text-right">
-                              <div className="font-bold text-green-700">{formatCurrency(quote.revenue)}</div>
-                              <div className="text-xs text-indigo-600 font-medium">{quote.margin}% margin</div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="font-bold text-green-700">{formatCurrency(quote.revenue)}</span>
+                              <span className="text-xs text-indigo-600 font-medium">{quote.margin}% margin</span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
