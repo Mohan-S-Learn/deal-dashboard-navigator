@@ -32,6 +32,8 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
 
   // Pass data back to parent whenever it changes
   useEffect(() => {
+    console.log('=== SERVICE CATEGORY DATA CHANGE ===');
+    console.log('ServiceCategories - current categoryRows:', JSON.stringify(categoryRows, null, 2));
     console.log('ServiceCategories - sending data to parent:', categoryRows);
     onDataChange(categoryRows);
   }, [categoryRows, onDataChange]);
@@ -44,6 +46,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   };
 
   const updateCategoryRow = (id: string, level: keyof Omit<ServiceCategoryRow, 'id'>, value: number | null) => {
+    console.log(`=== SERVICE CATEGORY ROW UPDATE ===`);
     console.log(`ServiceCategories - updating row ${id}, level ${level}, value:`, value);
     
     setCategoryRows(prev => {
@@ -59,13 +62,13 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
             updatedRow.level3 = null;
           }
           
-          console.log(`ServiceCategories - updated row:`, updatedRow);
+          console.log(`ServiceCategories - updated row result:`, updatedRow);
           return updatedRow;
         }
         return row;
       });
       
-      console.log('ServiceCategories - all rows after update:', updatedRows);
+      console.log('ServiceCategories - all rows after update:', JSON.stringify(updatedRows, null, 2));
       return updatedRows;
     });
   };
@@ -77,11 +80,13 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
       level2: null,
       level3: null
     }));
+    console.log('ServiceCategories - adding new rows:', newRows);
     setCategoryRows(prev => [...prev, ...newRows]);
   };
 
   const removeRow = (id: string) => {
     if (categoryRows.length > 1) {
+      console.log('ServiceCategories - removing row:', id);
       setCategoryRows(prev => prev.filter(row => row.id !== id));
     }
   };
@@ -89,6 +94,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   const copyFirstRowToAll = () => {
     if (categoryRows.length > 0) {
       const firstRow = categoryRows[0];
+      console.log('ServiceCategories - copying first row to all:', firstRow);
       setCategoryRows(prev => prev.map((row, index) => 
         index === 0 ? row : {
           ...row,
@@ -160,7 +166,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level1?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value) : null;
+                      const numValue = value ? parseInt(value, 10) : null;
                       console.log(`ServiceCategories - Select level1 changed for row ${row.id}:`, numValue);
                       updateCategoryRow(row.id, 'level1', numValue);
                     }}
@@ -179,7 +185,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level2?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value) : null;
+                      const numValue = value ? parseInt(value, 10) : null;
                       console.log(`ServiceCategories - Select level2 changed for row ${row.id}:`, numValue);
                       updateCategoryRow(row.id, 'level2', numValue);
                     }}
@@ -199,7 +205,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level3?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value) : null;
+                      const numValue = value ? parseInt(value, 10) : null;
                       console.log(`ServiceCategories - Select level3 changed for row ${row.id}:`, numValue);
                       updateCategoryRow(row.id, 'level3', numValue);
                     }}

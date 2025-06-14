@@ -179,7 +179,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
               <TableRow key={row.id} className={isDuplicate(row) ? 'bg-red-50' : ''}>
                 <TableCell>
                   <Select 
-                    value={row.region} 
+                    value={row.region || ''} 
                     onValueChange={(value) => {
                       console.log(`Geography - Select region changed for row ${row.id}:`, value);
                       updateRow(row.id, 'region', value);
@@ -199,7 +199,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 </TableCell>
                 <TableCell>
                   <Select 
-                    value={row.country} 
+                    value={row.country || ''} 
                     onValueChange={(value) => {
                       console.log(`Geography - Select country changed for row ${row.id}:`, value);
                       updateRow(row.id, 'country', value);
@@ -220,7 +220,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 </TableCell>
                 <TableCell>
                   <Select 
-                    value={row.city} 
+                    value={row.city || ''} 
                     onValueChange={(value) => {
                       console.log(`Geography - Select city changed for row ${row.id}:`, value);
                       updateRow(row.id, 'city', value);
