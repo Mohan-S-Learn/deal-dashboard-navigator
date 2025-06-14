@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Plus, Copy, FileSearch } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import CreateNewQuoteDialog from './CreateNewQuoteDialog';
 import CopyExistingQuoteDialog from './CopyExistingQuoteDialog';
 import CopyFromDealDialog from './CopyFromDealDialog';
@@ -32,36 +33,6 @@ interface QuoteVersion {
   status: 'Draft' | 'Active' | 'Archived';
 }
 
-const mockQuoteVersions: QuoteVersion[] = [
-  {
-    id: 'QV001',
-    quoteName: 'Standard Infrastructure Package',
-    createdDate: '2024-01-15',
-    createdBy: 'John Smith',
-    revenue: 250000,
-    marginPercent: 22,
-    status: 'Active'
-  },
-  {
-    id: 'QV002',
-    quoteName: 'Enhanced Security Bundle',
-    createdDate: '2024-01-10',
-    createdBy: 'Sarah Wilson',
-    revenue: 180000,
-    marginPercent: 18,
-    status: 'Draft'
-  },
-  {
-    id: 'QV003',
-    quoteName: 'Cloud Migration Phase 1',
-    createdDate: '2024-01-05',
-    createdBy: 'Mike Johnson',
-    revenue: 320000,
-    marginPercent: 25,
-    status: 'Archived'
-  }
-];
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -72,11 +43,94 @@ const formatCurrency = (amount: number) => {
 };
 
 const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack }) => {
-  const [quoteVersions, setQuoteVersions] = useState<QuoteVersion[]>(mockQuoteVersions);
+  const [quoteVersions, setQuoteVersions] = useState<QuoteVersion[]>([]);
+  const [loading, setLoading] = useState(true);
   const [createNewDialogOpen, setCreateNewDialogOpen] = useState(false);
   const [copyExistingDialogOpen, setCopyExistingDialogOpen] = useState(false);
   const [copyFromDealDialogOpen, setCopyFromDealDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Load quotes from database when component mounts
+  useEffect(() => {
+    loadQuotes();
+  }, [dealId]);
+
+  const loadQuotes = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('Quotes')
+        .select('*')
+        .eq('Deal_Id', dealId);
+
+      if (error) {
+        console.error('Error loading quotes:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load quotes from database",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const formattedQuotes = data.map(quote => ({
+        id: quote.Quote_Name, // Using Quote_Name as ID for now
+        quoteName: quote.Quote_Name,
+        createdDate: quote.Created_Date || new Date().toISOString().split('T')[0],
+        createdBy: quote.Created_By || 'Unknown',
+        revenue: quote.Revenue || 0,
+        marginPercent: quote['Margin %'] || 0,
+        status: (quote.Status || 'Draft') as 'Draft' | 'Active' | 'Archived'
+      }));
+
+      setQuoteVersions(formattedQuotes);
+    } catch (error) {
+      console.error('Error loading quotes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load quotes",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveQuoteToDatabase = async (quote: Omit<QuoteVersion, 'id'>) => {
+    try {
+      const { error } = await supabase
+        .from('Quotes')
+        .insert({
+          Deal_Id: dealId,
+          Quote_Name: quote.quoteName,
+          Created_Date: quote.createdDate,
+          Created_By: quote.createdBy,
+          Revenue: quote.revenue,
+          'Margin %': quote.marginPercent,
+          Status: quote.status
+        });
+
+      if (error) {
+        console.error('Error saving quote:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save quote to database",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error saving quote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save quote",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -87,68 +141,111 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
     }
   };
 
-  const handleCreateNewQuote = (quoteName: string) => {
-    const newQuote: QuoteVersion = {
-      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
+  const handleCreateNewQuote = async (quoteName: string) => {
+    const newQuote = {
       quoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
       revenue: 0,
       marginPercent: 0,
-      status: 'Draft'
+      status: 'Draft' as const
     };
-    
-    setQuoteVersions(prev => [...prev, newQuote]);
-    setCreateNewDialogOpen(false);
-    
-    toast({
-      title: "Quote Scenario Created",
-      description: `"${quoteName}" has been created successfully.`
-    });
+
+    const saved = await saveQuoteToDatabase(newQuote);
+    if (saved) {
+      await loadQuotes(); // Reload from database
+      setCreateNewDialogOpen(false);
+      
+      toast({
+        title: "Quote Scenario Created",
+        description: `"${quoteName}" has been created and saved successfully.`
+      });
+    }
   };
 
-  const handleCopyExistingQuote = (selectedQuoteId: string, newQuoteName: string) => {
+  const handleCopyExistingQuote = async (selectedQuoteId: string, newQuoteName: string) => {
     const originalQuote = quoteVersions.find(q => q.id === selectedQuoteId);
     if (!originalQuote) return;
 
-    const newQuote: QuoteVersion = {
-      ...originalQuote,
-      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
+    const newQuote = {
       quoteName: newQuoteName,
       createdDate: new Date().toISOString().split('T')[0],
       createdBy: 'Current User',
-      status: 'Draft'
+      revenue: originalQuote.revenue,
+      marginPercent: originalQuote.marginPercent,
+      status: 'Draft' as const
     };
-    
-    setQuoteVersions(prev => [...prev, newQuote]);
-    setCopyExistingDialogOpen(false);
-    
-    toast({
-      title: "Quote Scenario Copied",
-      description: `"${newQuoteName}" has been created from "${originalQuote.quoteName}".`
-    });
+
+    const saved = await saveQuoteToDatabase(newQuote);
+    if (saved) {
+      await loadQuotes(); // Reload from database
+      setCopyExistingDialogOpen(false);
+      
+      toast({
+        title: "Quote Scenario Copied",
+        description: `"${newQuoteName}" has been created from "${originalQuote.quoteName}" and saved.`
+      });
+    }
   };
 
-  const handleCopyFromDeal = (dealId: string, quoteId: string, newQuoteName: string) => {
-    // This would typically fetch the quote data from the selected deal
-    const newQuote: QuoteVersion = {
-      id: `QV${(quoteVersions.length + 1).toString().padStart(3, '0')}`,
-      quoteName: newQuoteName,
-      createdDate: new Date().toISOString().split('T')[0],
-      createdBy: 'Current User',
-      revenue: 0, // Would be copied from the source quote
-      marginPercent: 0, // Would be copied from the source quote
-      status: 'Draft'
-    };
-    
-    setQuoteVersions(prev => [...prev, newQuote]);
-    setCopyFromDealDialogOpen(false);
-    
-    toast({
-      title: "Quote Scenario Copied",
-      description: `"${newQuoteName}" has been copied from another deal.`
-    });
+  const handleCopyFromDeal = async (dealId: string, quoteId: string, newQuoteName: string) => {
+    // Load the source quote from database
+    try {
+      const { data, error } = await supabase
+        .from('Quotes')
+        .select('*')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteId)
+        .single();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to find the source quote",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const newQuote = {
+        quoteName: newQuoteName,
+        createdDate: new Date().toISOString().split('T')[0],
+        createdBy: 'Current User',
+        revenue: data.Revenue || 0,
+        marginPercent: data['Margin %'] || 0,
+        status: 'Draft' as const
+      };
+
+      const saved = await saveQuoteToDatabase(newQuote);
+      if (saved) {
+        await loadQuotes(); // Reload from database
+        setCopyFromDealDialogOpen(false);
+        
+        toast({
+          title: "Quote Scenario Copied",
+          description: `"${newQuoteName}" has been copied from another deal and saved.`
+        });
+      }
+    } catch (error) {
+      console.error('Error copying quote from deal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy quote from deal",
+        variant: "destructive"
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading quotes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -222,41 +319,48 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/70">
-                    <TableHead className="font-bold text-gray-700 py-4">Quote Name</TableHead>
-                    <TableHead className="font-bold text-gray-700 py-4">Created Date</TableHead>
-                    <TableHead className="font-bold text-gray-700 py-4">Created By</TableHead>
-                    <TableHead className="font-bold text-gray-700 py-4">Revenue</TableHead>
-                    <TableHead className="font-bold text-gray-700 py-4">Margin %</TableHead>
-                    <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {quoteVersions.map((quote, index) => (
-                    <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                      <TableCell className="py-4">
-                        <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
-                        <div className="text-sm text-gray-500 font-mono">{quote.id}</div>
-                      </TableCell>
-                      <TableCell className="text-gray-600 py-4">{quote.createdDate}</TableCell>
-                      <TableCell className="font-medium text-gray-700 py-4">{quote.createdBy}</TableCell>
-                      <TableCell className="font-bold text-lg text-green-700 py-4">
-                        {formatCurrency(quote.revenue)}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <span className="font-bold text-base text-indigo-600">{quote.marginPercent}%</span>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <Badge className={`${getStatusColor(quote.status)} font-semibold px-3 py-1 border`}>
-                          {quote.status}
-                        </Badge>
-                      </TableCell>
+              {quoteVersions.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-gray-500 text-lg">No quote scenarios found for this deal.</p>
+                  <p className="text-gray-400 mt-2">Create your first quote scenario using the buttons above.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50/50 hover:bg-gray-50/70">
+                      <TableHead className="font-bold text-gray-700 py-4">Quote Name</TableHead>
+                      <TableHead className="font-bold text-gray-700 py-4">Created Date</TableHead>
+                      <TableHead className="font-bold text-gray-700 py-4">Created By</TableHead>
+                      <TableHead className="font-bold text-gray-700 py-4">Revenue</TableHead>
+                      <TableHead className="font-bold text-gray-700 py-4">Margin %</TableHead>
+                      <TableHead className="font-bold text-gray-700 py-4">Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {quoteVersions.map((quote, index) => (
+                      <TableRow key={quote.id} className={`hover:bg-blue-50/50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                        <TableCell className="py-4">
+                          <div className="font-semibold text-gray-900 text-base">{quote.quoteName}</div>
+                          <div className="text-sm text-gray-500 font-mono">{quote.id}</div>
+                        </TableCell>
+                        <TableCell className="text-gray-600 py-4">{quote.createdDate}</TableCell>
+                        <TableCell className="font-medium text-gray-700 py-4">{quote.createdBy}</TableCell>
+                        <TableCell className="font-bold text-lg text-green-700 py-4">
+                          {formatCurrency(quote.revenue)}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <span className="font-bold text-base text-indigo-600">{quote.marginPercent}%</span>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <Badge className={`${getStatusColor(quote.status)} font-semibold px-3 py-1 border`}>
+                            {quote.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </div>
           </CardContent>
         </Card>

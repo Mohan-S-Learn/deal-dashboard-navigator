@@ -9,7 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      Deals: {
+        Row: {
+          Created_Date: string
+          Deal_Id: string
+          Deal_Name: string
+          Deal_Owner: string
+          "Margin%": number
+          Status: string
+          Total_Revenue: number
+        }
+        Insert: {
+          Created_Date: string
+          Deal_Id: string
+          Deal_Name: string
+          Deal_Owner: string
+          "Margin%": number
+          Status: string
+          Total_Revenue: number
+        }
+        Update: {
+          Created_Date?: string
+          Deal_Id?: string
+          Deal_Name?: string
+          Deal_Owner?: string
+          "Margin%"?: number
+          Status?: string
+          Total_Revenue?: number
+        }
+        Relationships: []
+      }
+      Quotes: {
+        Row: {
+          Created_By: string | null
+          Created_Date: string | null
+          Deal_Id: string
+          "Margin %": number | null
+          Quote_Name: string
+          Revenue: number | null
+          Status: string | null
+        }
+        Insert: {
+          Created_By?: string | null
+          Created_Date?: string | null
+          Deal_Id: string
+          "Margin %"?: number | null
+          Quote_Name: string
+          Revenue?: number | null
+          Status?: string | null
+        }
+        Update: {
+          Created_By?: string | null
+          Created_Date?: string | null
+          Deal_Id?: string
+          "Margin %"?: number | null
+          Quote_Name?: string
+          Revenue?: number | null
+          Status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Quotes_Deal_Id_fkey"
+            columns: ["Deal_Id"]
+            isOneToOne: true
+            referencedRelation: "Deals"
+            referencedColumns: ["Deal_Id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
