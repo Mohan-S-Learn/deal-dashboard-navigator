@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -33,9 +34,9 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     loadQuoteData
   } = useDealMasterData(dealId, quoteName);
 
-  // Add state for table data
-  const [geographyRows, setGeographyRows] = React.useState<any[]>([]);
-  const [categoryRows, setCategoryRows] = React.useState<any[]>([]);
+  // Add state for table data that will be managed by child components
+  const [geographyTableData, setGeographyTableData] = React.useState<any[]>([]);
+  const [categoryTableData, setCategoryTableData] = React.useState<any[]>([]);
 
   const { saveData } = useDealMasterSave();
 
@@ -119,8 +120,8 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   };
 
   const handleSaveData = () => {
-    // Convert geography rows to selected geography IDs
-    const geographyIds = geographyRows
+    // Convert geography table data to selected geography IDs
+    const geographyIds = geographyTableData
       .filter(row => row.region && row.country && row.city)
       .map(row => {
         const geography = geographies.find(g => 
@@ -132,12 +133,19 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
       })
       .filter(id => id !== undefined);
 
-    // Convert category rows to selected categories
-    const categoryData = categoryRows.length > 0 && categoryRows[0].level1 ? {
-      level1: categoryRows[0].level1,
-      level2: categoryRows[0].level2,
-      level3: categoryRows[0].level3,
+    // Convert category table data to selected categories
+    const categoryData = categoryTableData.length > 0 && categoryTableData[0].level1 ? {
+      level1: categoryTableData[0].level1,
+      level2: categoryTableData[0].level2,
+      level3: categoryTableData[0].level3,
     } : selectedCategories;
+
+    console.log('Saving data with:', {
+      geographyIds,
+      categoryData,
+      geographyTableData,
+      categoryTableData
+    });
 
     saveData(
       dealId,
@@ -208,12 +216,14 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
           geographies={geographies}
           selectedGeographies={selectedGeographies}
           onGeographyChange={handleGeographyChange}
+          onDataChange={setGeographyTableData}
         />
 
         <ServiceCategoriesTableSection
           serviceCategories={serviceCategories}
           selectedCategories={selectedCategories}
           onCategoryChange={handleCategoryChange}
+          onDataChange={setCategoryTableData}
         />
       </main>
     </div>

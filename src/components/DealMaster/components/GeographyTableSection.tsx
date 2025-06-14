@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,14 +11,21 @@ interface GeographyTableSectionProps {
   geographies: Geography[];
   selectedGeographies: number[];
   onGeographyChange: (geographyId: number, checked: boolean) => void;
+  onDataChange: (data: any[]) => void;
 }
 
 export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
-  geographies
+  geographies,
+  onDataChange
 }) => {
   const [selectedRows, setSelectedRows] = useState<SelectedGeographyRow[]>([
     { id: '1', region: '', country: '', city: '' }
   ]);
+
+  // Pass data back to parent whenever it changes
+  useEffect(() => {
+    onDataChange(selectedRows);
+  }, [selectedRows, onDataChange]);
 
   // Group geographies by region and country
   const groupedGeographies = useMemo(() => {

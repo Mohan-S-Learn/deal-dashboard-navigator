@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,7 @@ interface ServiceCategoriesTableSectionProps {
   serviceCategories: ServiceCategory[];
   selectedCategories: SelectedCategories;
   onCategoryChange: (level: keyof SelectedCategories, value: number | null) => void;
+  onDataChange: (data: any[]) => void;
 }
 
 interface ServiceCategoryRow {
@@ -22,11 +23,17 @@ interface ServiceCategoryRow {
 }
 
 export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSectionProps> = ({
-  serviceCategories
+  serviceCategories,
+  onDataChange
 }) => {
   const [categoryRows, setCategoryRows] = useState<ServiceCategoryRow[]>([
     { id: '1', level1: null, level2: null, level3: null }
   ]);
+
+  // Pass data back to parent whenever it changes
+  useEffect(() => {
+    onDataChange(categoryRows);
+  }, [categoryRows, onDataChange]);
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
     return serviceCategories.filter(cat => 

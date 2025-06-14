@@ -47,17 +47,14 @@ export const calculateDuration = (startDate: Date | null, endDate: Date | null):
   // Total months calculation
   let totalMonths = years * 12 + months;
   
-  // If we're not at the end of the month, but the start day is greater than end day,
-  // we haven't completed a full month yet
+  // If the end day is before the start day, we haven't completed a full month yet
   if (days < 0) {
     totalMonths--;
   }
   
-  // If dates are exactly the same, count as 1 month minimum
-  if (totalMonths === 0 && (start.getTime() !== end.getTime())) {
-    totalMonths = 1;
-  }
+  // Add one month to include both start and end months
+  totalMonths = totalMonths + 1;
   
-  // Round to nearest month and ensure minimum of 1
-  return Math.max(Math.round(totalMonths), 1);
+  // Ensure minimum of 1 month
+  return Math.max(totalMonths, 1);
 };
