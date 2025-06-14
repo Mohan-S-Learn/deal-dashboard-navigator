@@ -36,19 +36,21 @@ export const calculateDuration = (startDate: Date | null, endDate: Date | null):
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  // Calculate the difference in months more accurately
-  let months = (end.getFullYear() - start.getFullYear()) * 12;
-  months += end.getMonth() - start.getMonth();
+  // Ensure end date is after start date
+  if (end <= start) return 0;
   
-  // If the end day is before the start day in the month, subtract 1
+  // Calculate the difference in months more accurately
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  
+  // Total months calculation
+  let totalMonths = years * 12 + months;
+  
+  // Adjust for partial months based on day of month
   if (end.getDate() < start.getDate()) {
-    months--;
+    totalMonths--;
   }
   
   // Ensure we have at least 1 month if there's any time difference
-  if (months <= 0 && end > start) {
-    months = 1;
-  }
-  
-  return Math.max(0, months);
+  return Math.max(totalMonths, 1);
 };

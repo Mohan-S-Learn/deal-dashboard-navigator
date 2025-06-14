@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -7,10 +6,10 @@ import { DealMasterHeader } from './DealMaster/components/DealMasterHeader';
 import { TimelineSection } from './DealMaster/components/TimelineSection';
 import { MarketResourcesSection } from './DealMaster/components/MarketResourcesSection';
 import { DealDiscountSection } from './DealMaster/components/DealDiscountSection';
-import { VolumeDiscountsSection } from './DealMaster/components/VolumeDiscountsSection';
+import { VolumeDiscountsTableSection } from './DealMaster/components/VolumeDiscountsTableSection';
 import { CostComponentsSection } from './DealMaster/components/CostComponentsSection';
-import { GeographySection } from './DealMaster/components/GeographySection';
-import { ServiceCategoriesSection } from './DealMaster/components/ServiceCategoriesSection';
+import { GeographyTableSection } from './DealMaster/components/GeographyTableSection';
+import { ServiceCategoriesTableSection } from './DealMaster/components/ServiceCategoriesTableSection';
 import { DealMasterProps, QuoteData, VolumeDiscountRange, SelectedCategories } from './DealMaster/types';
 
 const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) => {
@@ -169,7 +168,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
           />
         </div>
 
-        <VolumeDiscountsSection
+        <VolumeDiscountsTableSection
           volumeDiscounts={volumeDiscounts}
           onAddVolumeDiscount={addVolumeDiscount}
           onRemoveVolumeDiscount={removeVolumeDiscount}
@@ -181,13 +180,13 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
           onNumberChange={handleNumberChange}
         />
 
-        <GeographySection
+        <GeographyTableSection
           geographies={geographies}
           selectedGeographies={selectedGeographies}
           onGeographyChange={handleGeographyChange}
         />
 
-        <ServiceCategoriesSection
+        <ServiceCategoriesTableSection
           serviceCategories={serviceCategories}
           selectedCategories={selectedCategories}
           onCategoryChange={handleCategoryChange}
