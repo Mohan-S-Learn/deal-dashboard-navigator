@@ -82,19 +82,57 @@ const VersionManagement: React.FC<VersionManagementProps> = ({ dealId, onBack })
 
       console.log('Raw quotes data:', data);
 
-      const formattedQuotes = data.map((quote, index) => ({
-        id: `${quote.Deal_Id}-${quote.Quote_Name}-${index}`, // Create unique ID
-        quoteId: quote.Quote_ID,
-        quoteName: quote.Quote_Name,
-        createdDate: quote.Created_Date || new Date().toISOString().split('T')[0],
-        createdBy: quote.Created_By || 'Unknown',
-        revenue: quote.Revenue || 0,
-        marginPercent: quote['Margin %'] || 0,
-        status: (quote.Status || 'Draft') as 'Draft' | 'Active' | 'Archived'
-      }));
+      // Process quotes and generate Quote_IDs for those that don't have them
+      const processedQuotes = [];
+      const quotesToUpdate = [];
 
-      console.log('Formatted quotes:', formattedQuotes);
-      setQuoteVersions(formattedQuotes);
+      for (let index = 0; index < data.length; index++) {
+        const quote = data[index];
+        let quoteId = quote.Quote_ID;
+
+        // If Quote_ID is null or empty, generate a new one
+        if (!quoteId) {
+          quoteId = generateUniqueQuoteId(dealId);
+          quotesToUpdate.push({
+            Deal_Id: quote.Deal_Id,
+            Quote_Name: quote.Quote_Name,
+            newQuoteId: quoteId
+          });
+        }
+
+        processedQuotes.push({
+          id: `${quote.Deal_Id}-${quote.Quote_Name}-${index}`,
+          quoteId: quoteId,
+          quoteName: quote.Quote_Name,
+          createdDate: quote.Created_Date || new Date().toISOString().split('T')[0],
+          createdBy: quote.Created_By || 'Unknown',
+          revenue: quote.Revenue || 0,
+          marginPercent: quote['Margin %'] || 0,
+          status: (quote.Status || 'Draft') as 'Draft' | 'Active' | 'Archived'
+        });
+      }
+
+      // Update quotes in database that didn't have Quote_IDs
+      if (quotesToUpdate.length > 0) {
+        console.log('Updating quotes with new Quote_IDs:', quotesToUpdate);
+        
+        for (const quoteUpdate of quotesToUpdate) {
+          const { error: updateError } = await supabase
+            .from('Quotes')
+            .update({ Quote_ID: quoteUpdate.newQuoteId })
+            .eq('Deal_Id', quoteUpdate.Deal_Id)
+            .eq('Quote_Name', quoteUpdate.Quote_Name);
+
+          if (updateError) {
+            console.error('Error updating quote with new Quote_ID:', updateError);
+          } else {
+            console.log(`Updated quote "${quoteUpdate.Quote_Name}" with new Quote_ID: ${quoteUpdate.newQuoteId}`);
+          }
+        }
+      }
+
+      console.log('Processed quotes:', processedQuotes);
+      setQuoteVersions(processedQuotes);
     } catch (error) {
       console.error('Error loading quotes:', error);
       toast({
