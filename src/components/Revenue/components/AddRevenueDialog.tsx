@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -48,7 +47,11 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
   // Auto-populate benchmark rates when service categories and resource skill change
   useEffect(() => {
     const fetchBenchmarkRates = async () => {
-      if (!formData.service_category_level_4_id) return;
+      // Need at least the resource skill (level 4) to fetch benchmark rates
+      if (!formData.service_category_level_4_id) {
+        console.log('No resource skill selected, skipping benchmark rate fetch');
+        return;
+      }
 
       console.log('Fetching benchmark rates for:', {
         service_category_level_1_id: formData.service_category_level_1_id,
@@ -60,13 +63,19 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
       });
 
       try {
+        // Start with the required fields
         let query = supabase
           .from('BenchmarkRate')
           .select('*')
           .eq('service_category_level_4_id', formData.service_category_level_4_id)
           .eq('experience_years', formData.experience_years);
 
-        // Add optional filters
+        // Add geography filter if selected
+        if (formData.geography_id) {
+          query = query.eq('geography_id', formData.geography_id);
+        }
+
+        // Add service category filters if selected
         if (formData.service_category_level_1_id) {
           query = query.eq('service_category_level_1_id', formData.service_category_level_1_id);
         }
@@ -76,9 +85,6 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
         if (formData.service_category_level_3_id) {
           query = query.eq('service_category_level_3_id', formData.service_category_level_3_id);
         }
-        if (formData.geography_id) {
-          query = query.eq('geography_id', formData.geography_id);
-        }
 
         const { data: benchmarkRates, error } = await query;
 
@@ -87,38 +93,83 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
           return;
         }
 
-        console.log('Found benchmark rates:', benchmarkRates);
+        console.log('Benchmark rate query result:', benchmarkRates);
 
         if (benchmarkRates && benchmarkRates.length > 0) {
           const rate = benchmarkRates[0]; // Use the first matching rate
+          console.log('Auto-populating with rate:', rate);
+          
           setFormData(prev => ({
             ...prev,
             benchmark_rate_usd_per_hour: rate.benchmark_rate_usd_per_hour || 0,
             cb_cost_usd_per_hour: rate.cb_cost_usd_per_hour || 0,
             margin_percent: rate.margin_percent || 0,
           }));
-          console.log('Auto-populated rates:', {
-            benchmark_rate: rate.benchmark_rate_usd_per_hour,
-            cb_cost: rate.cb_cost_usd_per_hour,
-            margin: rate.margin_percent
-          });
+          
+          console.log('Rates auto-populated successfully');
         } else {
-          console.log('No matching benchmark rates found');
+          console.log('No matching benchmark rates found for the current selection');
+          
+          // Try a broader search without geography filter
+          if (formData.geography_id) {
+            console.log('Retrying without geography filter...');
+            const { data: fallbackRates, error: fallbackError } = await supabase
+              .from('BenchmarkRate')
+              .select('*')
+              .eq('service_category_level_4_id', formData.service_category_level_4_id)
+              .eq('experience_years', formData.experience_years)
+              .is('geography_id', null);
+
+            if (!fallbackError && fallbackRates && fallbackRates.length > 0) {
+              const rate = fallbackRates[0];
+              console.log('Using fallback rate (no geography):', rate);
+              
+              setFormData(prev => ({
+                ...prev,
+                benchmark_rate_usd_per_hour: rate.benchmark_rate_usd_per_hour || 0,
+                cb_cost_usd_per_hour: rate.cb_cost_usd_per_hour || 0,
+                margin_percent: rate.margin_percent || 0,
+              }));
+            } else {
+              console.log('No fallback rates found either');
+            }
+          }
         }
       } catch (error) {
         console.error('Error in fetchBenchmarkRates:', error);
       }
     };
 
-    fetchBenchmarkRates();
+    // Only fetch if we have the minimum required data
+    if (formData.service_category_level_4_id && formData.experience_years) {
+      fetchBenchmarkRates();
+    }
   }, [
-    formData.service_category_level_1_id,
-    formData.service_category_level_2_id,
-    formData.service_category_level_3_id,
     formData.service_category_level_4_id,
     formData.experience_years,
-    formData.geography_id
+    formData.geography_id,
+    formData.service_category_level_1_id,
+    formData.service_category_level_2_id,
+    formData.service_category_level_3_id
   ]);
+
+  // Auto-set cost category when service category level 3 is selected
+  useEffect(() => {
+    if (formData.service_category_level_3_id) {
+      // Find cost category that matches the service category level 3
+      const matchingCostCategory = costCategories.find(cc => 
+        cc.service_category_level_3_id === formData.service_category_level_3_id
+      );
+      
+      if (matchingCostCategory) {
+        console.log('Auto-setting cost category to match service category level 3:', matchingCostCategory);
+        setFormData(prev => ({
+          ...prev,
+          cost_category_id: matchingCostCategory.id
+        }));
+      }
+    }
+  }, [formData.service_category_level_3_id, costCategories]);
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
     return serviceCategories.filter(cat => 
