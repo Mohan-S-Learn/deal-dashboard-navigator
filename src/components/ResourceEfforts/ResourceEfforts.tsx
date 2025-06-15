@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ResourceEffortsProps, QuoteResourceEffort, EffortInputMode } from './types';
-import { ResourceSkill, CostCategory } from '../Revenue/types';
+import { CostCategory } from '../Revenue/types';
 import { ServiceCategory } from '../DealMaster/types';
 import { ResourceEffortsTable } from './components/ResourceEffortsTable';
 import { AddResourceEffortDialog } from './components/AddResourceEffortDialog';
@@ -14,7 +14,6 @@ import { EffortInputModeSelector } from './components/EffortInputModeSelector';
 
 const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, onBack }) => {
   const [effortData, setEffortData] = useState<QuoteResourceEffort[]>([]);
-  const [resourceSkills, setResourceSkills] = useState<ResourceSkill[]>([]);
   const [costCategories, setCostCategories] = useState<CostCategory[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +29,6 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
   const loadData = async () => {
     try {
       setLoading(true);
-
-      // Load ResourceSkills
-      const { data: resourceSkillsData, error: resourceSkillsError } = await supabase
-        .from('ResourceSkill')
-        .select('*')
-        .order('name');
-
-      if (resourceSkillsError) throw resourceSkillsError;
 
       // Load CostCategories
       const { data: costCategoriesData, error: costCategoriesError } = await supabase
@@ -66,7 +57,6 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
 
       if (effortError) throw effortError;
 
-      setResourceSkills(resourceSkillsData || []);
       setCostCategories(costCategoriesData || []);
       setServiceCategories(serviceCategoriesData || []);
       setEffortData(effortDataResult || []);
@@ -195,7 +185,6 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
           <CardContent>
             <ResourceEffortsTable
               data={effortData}
-              resourceSkills={resourceSkills}
               costCategories={costCategories}
               serviceCategories={serviceCategories}
               inputMode={inputMode}
@@ -211,7 +200,6 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
           onAdd={handleAddEffort}
           dealId={dealId}
           quoteName={quoteName}
-          resourceSkills={resourceSkills}
           costCategories={costCategories}
           serviceCategories={serviceCategories}
           inputMode={inputMode}

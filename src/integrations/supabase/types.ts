@@ -18,10 +18,10 @@ export type Database = {
           geography_id: number | null
           id: number
           margin_percent: number | null
-          resource_skill_id: number
           service_category_level_1_id: number | null
           service_category_level_2_id: number | null
           service_category_level_3_id: number | null
+          service_category_level_4_id: number
         }
         Insert: {
           benchmark_rate_usd_per_hour?: number | null
@@ -31,10 +31,10 @@ export type Database = {
           geography_id?: number | null
           id?: number
           margin_percent?: number | null
-          resource_skill_id: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id: number
         }
         Update: {
           benchmark_rate_usd_per_hour?: number | null
@@ -44,10 +44,10 @@ export type Database = {
           geography_id?: number | null
           id?: number
           margin_percent?: number | null
-          resource_skill_id?: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id?: number
         }
         Relationships: [
           {
@@ -55,13 +55,6 @@ export type Database = {
             columns: ["geography_id"]
             isOneToOne: false
             referencedRelation: "Geography"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "BenchmarkRate_resource_skill_id_fkey"
-            columns: ["resource_skill_id"]
-            isOneToOne: false
-            referencedRelation: "ResourceSkill"
             referencedColumns: ["id"]
           },
           {
@@ -81,6 +74,13 @@ export type Database = {
           {
             foreignKeyName: "BenchmarkRate_service_category_level_3_id_fkey"
             columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "BenchmarkRate_service_category_level_4_id_fkey"
+            columns: ["service_category_level_4_id"]
             isOneToOne: false
             referencedRelation: "ServiceCategory"
             referencedColumns: ["id"]
@@ -238,10 +238,10 @@ export type Database = {
           hours_allocated: number
           id: number
           Quote_Name: string
-          resource_skill_id: number
           service_category_level_1_id: number | null
           service_category_level_2_id: number | null
           service_category_level_3_id: number | null
+          service_category_level_4_id: number
         }
         Insert: {
           cost_category_id?: number | null
@@ -253,10 +253,10 @@ export type Database = {
           hours_allocated: number
           id?: number
           Quote_Name: string
-          resource_skill_id: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id: number
         }
         Update: {
           cost_category_id?: number | null
@@ -268,10 +268,10 @@ export type Database = {
           hours_allocated?: number
           id?: number
           Quote_Name?: string
-          resource_skill_id?: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id?: number
         }
         Relationships: [
           {
@@ -287,13 +287,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "Quotes"
             referencedColumns: ["Deal_Id", "Quote_Name"]
-          },
-          {
-            foreignKeyName: "QuoteResourceEffort_resource_skill_id_fkey"
-            columns: ["resource_skill_id"]
-            isOneToOne: false
-            referencedRelation: "ResourceSkill"
-            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "QuoteResourceEffort_service_category_level_1_id_fkey"
@@ -312,6 +305,13 @@ export type Database = {
           {
             foreignKeyName: "QuoteResourceEffort_service_category_level_3_id_fkey"
             columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_service_category_level_4_id_fkey"
+            columns: ["service_category_level_4_id"]
             isOneToOne: false
             referencedRelation: "ServiceCategory"
             referencedColumns: ["id"]
@@ -371,10 +371,10 @@ export type Database = {
           is_cb_cost_overridden: boolean | null
           margin_percent: number | null
           Quote_Name: string
-          resource_skill_id: number
           service_category_level_1_id: number | null
           service_category_level_2_id: number | null
           service_category_level_3_id: number | null
+          service_category_level_4_id: number
         }
         Insert: {
           benchmark_rate_usd_per_hour?: number | null
@@ -389,10 +389,10 @@ export type Database = {
           is_cb_cost_overridden?: boolean | null
           margin_percent?: number | null
           Quote_Name: string
-          resource_skill_id: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id: number
         }
         Update: {
           benchmark_rate_usd_per_hour?: number | null
@@ -407,10 +407,10 @@ export type Database = {
           is_cb_cost_overridden?: boolean | null
           margin_percent?: number | null
           Quote_Name?: string
-          resource_skill_id?: number
           service_category_level_1_id?: number | null
           service_category_level_2_id?: number | null
           service_category_level_3_id?: number | null
+          service_category_level_4_id?: number
         }
         Relationships: [
           {
@@ -435,13 +435,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "QuoteRevenue_resource_skill_id_fkey"
-            columns: ["resource_skill_id"]
-            isOneToOne: false
-            referencedRelation: "ResourceSkill"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "QuoteRevenue_service_category_level_1_id_fkey"
             columns: ["service_category_level_1_id"]
             isOneToOne: false
@@ -458,6 +451,13 @@ export type Database = {
           {
             foreignKeyName: "QuoteRevenue_service_category_level_3_id_fkey"
             columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_service_category_level_4_id_fkey"
+            columns: ["service_category_level_4_id"]
             isOneToOne: false
             referencedRelation: "ServiceCategory"
             referencedColumns: ["id"]
@@ -612,24 +612,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      ResourceSkill: {
-        Row: {
-          created_at: string | null
-          id: number
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          name?: string
-        }
-        Relationships: []
       }
       ResourceType: {
         Row: {

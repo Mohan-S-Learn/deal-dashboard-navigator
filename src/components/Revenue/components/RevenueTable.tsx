@@ -3,13 +3,12 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Edit } from 'lucide-react';
-import { QuoteRevenue, ResourceSkill, CostCategory } from '../types';
+import { Trash2 } from 'lucide-react';
+import { QuoteRevenue, CostCategory } from '../types';
 import { ServiceCategory, Geography } from '../../DealMaster/types';
 
 interface RevenueTableProps {
   data: QuoteRevenue[];
-  resourceSkills: ResourceSkill[];
   costCategories: CostCategory[];
   serviceCategories: ServiceCategory[];
   geographies: Geography[];
@@ -20,7 +19,6 @@ interface RevenueTableProps {
 
 export const RevenueTable: React.FC<RevenueTableProps> = ({
   data,
-  resourceSkills,
   costCategories,
   serviceCategories,
   geographies,
@@ -33,7 +31,8 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
   };
 
   const getResourceSkillName = (id: number) => {
-    return resourceSkills.find(rs => rs.id === id)?.name || 'N/A';
+    // Level 4 service categories are the resource skills
+    return serviceCategories.find(sc => sc.id === id && sc.level === 4)?.name || 'N/A';
   };
 
   const getCostCategoryName = (id?: number) => {
@@ -57,7 +56,7 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
             <TableHead>Service Category L1</TableHead>
             <TableHead>Service Category L2</TableHead>
             <TableHead>Service Category L3</TableHead>
-            <TableHead>Resource Skill</TableHead>
+            <TableHead>Resource Skill (L4)</TableHead>
             <TableHead>Experience (Years)</TableHead>
             <TableHead>Cost Category</TableHead>
             <TableHead>Geography</TableHead>
@@ -73,7 +72,7 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
               <TableCell>{getServiceCategoryName(item.service_category_level_1_id)}</TableCell>
               <TableCell>{getServiceCategoryName(item.service_category_level_2_id)}</TableCell>
               <TableCell>{getServiceCategoryName(item.service_category_level_3_id)}</TableCell>
-              <TableCell>{getResourceSkillName(item.resource_skill_id)}</TableCell>
+              <TableCell>{getResourceSkillName(item.service_category_level_4_id)}</TableCell>
               <TableCell>{item.experience_years}</TableCell>
               <TableCell>{getCostCategoryName(item.cost_category_id)}</TableCell>
               <TableCell>{getGeographyName(item.geography_id)}</TableCell>

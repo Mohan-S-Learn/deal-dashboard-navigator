@@ -1,10 +1,4 @@
 
-export interface ResourceSkill {
-  id: number;
-  name: string;
-  created_at?: string;
-}
-
 export interface CostCategory {
   id: number;
   name: string;
@@ -17,7 +11,7 @@ export interface BenchmarkRate {
   service_category_level_1_id?: number;
   service_category_level_2_id?: number;
   service_category_level_3_id?: number;
-  resource_skill_id: number;
+  service_category_level_4_id: number;
   experience_years: number;
   geography_id?: number;
   benchmark_rate_usd_per_hour?: number;
@@ -33,7 +27,7 @@ export interface QuoteRevenue {
   service_category_level_1_id?: number;
   service_category_level_2_id?: number;
   service_category_level_3_id?: number;
-  resource_skill_id: number;
+  service_category_level_4_id: number;
   experience_years: number;
   cost_category_id?: number;
   geography_id?: number;

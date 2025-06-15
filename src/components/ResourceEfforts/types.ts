@@ -6,7 +6,7 @@ export interface QuoteResourceEffort {
   service_category_level_1_id?: number;
   service_category_level_2_id?: number;
   service_category_level_3_id?: number;
-  resource_skill_id: number;
+  service_category_level_4_id: number;
   experience_years: number;
   cost_category_id?: number;
   effort_year: number;
@@ -22,9 +22,3 @@ export interface ResourceEffortsProps {
 }
 
 export type EffortInputMode = 'year' | 'month';
-
-export interface EffortSummary {
-  year: number;
-  total_hours: number;
-  monthly_breakdown: { [month: number]: number };
-}

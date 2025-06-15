@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { RevenueProps, QuoteRevenue, ResourceSkill, CostCategory, BenchmarkRate } from './types';
-import { ServiceCategory } from '../DealMaster/types';
+import { RevenueProps, QuoteRevenue, CostCategory, BenchmarkRate } from './types';
+import { ServiceCategory, Geography } from '../DealMaster/types';
 import { RevenueTable } from './components/RevenueTable';
 import { AddRevenueDialog } from './components/AddRevenueDialog';
 
 const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
   const [revenueData, setRevenueData] = useState<QuoteRevenue[]>([]);
-  const [resourceSkills, setResourceSkills] = useState<ResourceSkill[]>([]);
   const [costCategories, setCostCategories] = useState<CostCategory[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
+  const [geographies, setGeographies] = useState<Geography[]>([]);
+  const [selectedGeographies, setSelectedGeographies] = useState<number[]>([]);
   const [benchmarkRates, setBenchmarkRates] = useState<BenchmarkRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -28,14 +29,6 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-
-      // Load ResourceSkills
-      const { data: resourceSkillsData, error: resourceSkillsError } = await supabase
-        .from('ResourceSkill')
-        .select('*')
-        .order('name');
-
-      if (resourceSkillsError) throw resourceSkillsError;
 
       // Load CostCategories
       const { data: costCategoriesData, error: costCategoriesError } = await supabase
@@ -53,6 +46,23 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
       if (serviceCategoriesError) throw serviceCategoriesError;
 
+      // Load Geographies
+      const { data: geographiesData, error: geographiesError } = await supabase
+        .from('Geography')
+        .select('*')
+        .order('country', { ascending: true });
+
+      if (geographiesError) throw geographiesError;
+
+      // Load selected geographies for this quote
+      const { data: selectedGeographiesData, error: selectedGeographiesError } = await supabase
+        .from('QuoteGeography')
+        .select('geography_id')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName);
+
+      if (selectedGeographiesError) throw selectedGeographiesError;
+
       // Load BenchmarkRates
       const { data: benchmarkRatesData, error: benchmarkRatesError } = await supabase
         .from('BenchmarkRate')
@@ -69,9 +79,10 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
       if (revenueError) throw revenueError;
 
-      setResourceSkills(resourceSkillsData || []);
       setCostCategories(costCategoriesData || []);
       setServiceCategories(serviceCategoriesData || []);
+      setGeographies(geographiesData || []);
+      setSelectedGeographies(selectedGeographiesData?.map(g => g.geography_id) || []);
       setBenchmarkRates(benchmarkRatesData || []);
       setRevenueData(revenueDataResult || []);
 
@@ -196,9 +207,10 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
           <CardContent>
             <RevenueTable
               data={revenueData}
-              resourceSkills={resourceSkills}
               costCategories={costCategories}
               serviceCategories={serviceCategories}
+              geographies={geographies}
+              selectedGeographies={selectedGeographies}
               onUpdate={handleUpdateRevenue}
               onDelete={handleDeleteRevenue}
             />
@@ -211,9 +223,10 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
           onAdd={handleAddRevenue}
           dealId={dealId}
           quoteName={quoteName}
-          resourceSkills={resourceSkills}
           costCategories={costCategories}
           serviceCategories={serviceCategories}
+          geographies={geographies}
+          selectedGeographies={selectedGeographies}
         />
       </div>
     </div>
