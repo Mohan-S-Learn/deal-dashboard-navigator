@@ -19,7 +19,6 @@ export const useDealMasterSave = () => {
       console.log('=== SAVE OPERATION START ===');
       console.log('Deal ID:', dealId);
       console.log('Quote Name:', quoteName);
-      console.log('Quote data to save:', quoteData);
       console.log('Geography table data received:', geographyTableData);
       console.log('Category table data received:', categoryTableData);
       
@@ -129,65 +128,31 @@ export const useDealMasterSave = () => {
         console.log('Resource types saved successfully');
       }
 
-      // Process Geography Table Data
+      // Process Geography Data - now expects array of geography IDs
       console.log('=== PROCESSING GEOGRAPHY DATA ===');
-      console.log('Raw geography table data:', JSON.stringify(geographyTableData, null, 2));
+      console.log('Geography data type:', typeof geographyTableData);
+      console.log('Geography data content:', geographyTableData);
       
       // Delete existing geography records
       await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing geography records');
 
-      // Filter out empty geography rows - more lenient validation
-      const validGeographyRows = geographyTableData.filter(row => {
-        const hasData = row && 
-          row.region && row.region.trim() !== '' && 
-          row.country && row.country.trim() !== '' && 
-          row.city && row.city.trim() !== '';
-        console.log('Geography row validation:', row, 'hasData:', hasData);
-        return hasData;
-      });
+      // Check if geographyTableData is an array of geography IDs
+      if (Array.isArray(geographyTableData) && geographyTableData.length > 0) {
+        // Filter out null/invalid geography IDs
+        const validGeographyIds = geographyTableData.filter(id => 
+          id !== null && id !== undefined && !isNaN(Number(id))
+        ).map(id => Number(id));
 
-      console.log('Valid geography rows:', validGeographyRows);
+        console.log('Valid geography IDs:', validGeographyIds);
 
-      if (validGeographyRows.length > 0) {
-        // Load all geographies to find matching IDs
-        const { data: allGeographies, error: geoLoadError } = await supabase
-          .from('Geography')
-          .select('*');
-        
-        if (geoLoadError) {
-          console.error('Error loading geographies:', geoLoadError);
-          throw geoLoadError;
-        }
+        if (validGeographyIds.length > 0) {
+          const geographyInserts = validGeographyIds.map(geoId => ({
+            Deal_Id: dealId,
+            Quote_Name: quoteName,
+            geography_id: geoId
+          }));
 
-        console.log('Loaded geographies from database:', allGeographies);
-
-        const geographyInserts: any[] = [];
-
-        validGeographyRows.forEach((row, index) => {
-          console.log(`Processing geography row ${index}:`, row);
-          
-          // Find matching geography by region, country, and city
-          const geography = allGeographies?.find(g => 
-            g.region?.trim().toLowerCase() === row.region.trim().toLowerCase() && 
-            g.country?.trim().toLowerCase() === row.country.trim().toLowerCase() && 
-            g.city?.trim().toLowerCase() === row.city.trim().toLowerCase()
-          );
-
-          if (geography) {
-            console.log(`Found geography match for row ${index}:`, geography);
-            geographyInserts.push({
-              Deal_Id: dealId,
-              Quote_Name: quoteName,
-              geography_id: geography.id
-            });
-          } else {
-            console.warn(`No geography found for row ${index}:`, row);
-            console.log('Available geographies:', allGeographies?.map(g => ({ id: g.id, region: g.region, country: g.country, city: g.city })));
-          }
-        });
-
-        if (geographyInserts.length > 0) {
           console.log('Inserting geography records:', geographyInserts);
           const { error: geoError } = await supabase.from('QuoteGeography').insert(geographyInserts);
           if (geoError) {
@@ -196,57 +161,59 @@ export const useDealMasterSave = () => {
           }
           console.log('Geography records saved successfully');
         } else {
-          console.log('No valid geography matches found to save');
+          console.log('No valid geography IDs to save');
         }
       } else {
-        console.log('No valid geography rows to process');
+        console.log('No geography data or invalid format to process');
       }
 
-      // Process Service Category Table Data
+      // Process Service Category Data
       console.log('=== PROCESSING SERVICE CATEGORY DATA ===');
-      console.log('Raw category table data:', JSON.stringify(categoryTableData, null, 2));
+      console.log('Category data type:', typeof categoryTableData);
+      console.log('Category data content:', categoryTableData);
       
       // Delete existing category records
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing category records');
 
-      // Filter out incomplete category rows - require at least level1
-      const validCategoryRows = categoryTableData.filter(row => {
-        const hasLevel1 = row && 
-          row.level1 !== null && 
-          row.level1 !== undefined && 
-          row.level1 !== '' && 
-          !isNaN(parseInt(row.level1.toString()));
-        console.log('Category row validation:', row, 'hasLevel1:', hasLevel1);
-        return hasLevel1;
-      });
-
-      console.log('Valid category rows:', validCategoryRows);
-
-      if (validCategoryRows.length > 0) {
-        const categoryInserts = validCategoryRows.map((row, index) => {
-          const insert = {
-            Deal_Id: dealId,
-            Quote_Name: quoteName,
-            category_level_1_id: parseInt(row.level1.toString()),
-            category_level_2_id: row.level2 && row.level2 !== null && row.level2 !== '' && !isNaN(parseInt(row.level2.toString())) 
-              ? parseInt(row.level2.toString()) : null,
-            category_level_3_id: row.level3 && row.level3 !== null && row.level3 !== '' && !isNaN(parseInt(row.level3.toString())) 
-              ? parseInt(row.level3.toString()) : null,
-          };
-          console.log(`Category insert for row ${index}:`, insert);
-          return insert;
+      // Validate and process category data
+      if (Array.isArray(categoryTableData) && categoryTableData.length > 0) {
+        const validCategoryRows = categoryTableData.filter(row => {
+          const hasValidLevel1 = row && 
+            row.level1 !== null && 
+            row.level1 !== undefined && 
+            !isNaN(Number(row.level1));
+          console.log('Category row validation:', row, 'hasValidLevel1:', hasValidLevel1);
+          return hasValidLevel1;
         });
 
-        console.log('Inserting category records:', categoryInserts);
-        const { error: catError } = await supabase.from('QuoteServiceCategory').insert(categoryInserts);
-        if (catError) {
-          console.error('Category insert error:', catError);
-          throw catError;
+        console.log('Valid category rows:', validCategoryRows);
+
+        if (validCategoryRows.length > 0) {
+          const categoryInserts = validCategoryRows.map((row, index) => {
+            const insert = {
+              Deal_Id: dealId,
+              Quote_Name: quoteName,
+              category_level_1_id: Number(row.level1),
+              category_level_2_id: row.level2 && !isNaN(Number(row.level2)) ? Number(row.level2) : null,
+              category_level_3_id: row.level3 && !isNaN(Number(row.level3)) ? Number(row.level3) : null,
+            };
+            console.log(`Category insert for row ${index}:`, insert);
+            return insert;
+          });
+
+          console.log('Inserting category records:', categoryInserts);
+          const { error: catError } = await supabase.from('QuoteServiceCategory').insert(categoryInserts);
+          if (catError) {
+            console.error('Category insert error:', catError);
+            throw catError;
+          }
+          console.log('Service category records saved successfully');
+        } else {
+          console.log('No valid category rows to save');
         }
-        console.log('Service category records saved successfully');
       } else {
-        console.log('No valid category rows to process');
+        console.log('No category data or invalid format to process');
       }
 
       // Save volume discounts

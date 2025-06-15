@@ -16,7 +16,7 @@ interface ServiceCategoriesTableSectionProps {
   onDataChange: (data: any[]) => void;
 }
 
-interface ServiceCategoryRow {
+interface ServiceCategoryRowData {
   id: string;
   level1: number | null;
   level2: number | null;
@@ -27,22 +27,20 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   serviceCategories,
   onDataChange
 }) => {
-  const [categoryRows, setCategoryRows] = useState<ServiceCategoryRow[]>([
+  const [categoryRows, setCategoryRows] = useState<ServiceCategoryRowData[]>([
     { id: '1', level1: null, level2: null, level3: null }
   ]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load existing data from parent component props and database
+  // Load existing data from database
   useEffect(() => {
     const loadExistingData = async () => {
       if (isInitialized) return;
       
       try {
-        // Get current URL to extract dealId and quoteName
         const currentPath = window.location.pathname;
         const pathParts = currentPath.split('/');
         
-        // Assuming URL structure is /deal-master/{dealId}/{quoteName}
         if (pathParts.length >= 4 && pathParts[1] === 'deal-master') {
           const dealId = pathParts[2];
           const quoteName = decodeURIComponent(pathParts[3]);
@@ -69,8 +67,6 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
             
             setCategoryRows(loadedRows);
             console.log('ServiceCategories - Set loaded rows:', loadedRows);
-          } else {
-            console.log('ServiceCategories - No existing data found, using default');
           }
         }
       } catch (error) {
@@ -87,8 +83,8 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   useEffect(() => {
     if (!isInitialized) return;
     
+    // Send the category rows directly - save function expects this format
     console.log('=== SERVICE CATEGORY DATA CHANGE ===');
-    console.log('ServiceCategories - current categoryRows:', JSON.stringify(categoryRows, null, 2));
     console.log('ServiceCategories - sending data to parent:', categoryRows);
     onDataChange(categoryRows);
   }, [categoryRows, onDataChange, isInitialized]);
@@ -100,14 +96,16 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
     );
   };
 
-  const updateCategoryRow = (id: string, level: keyof Omit<ServiceCategoryRow, 'id'>, value: number | null) => {
+  const updateCategoryRow = (id: string, level: keyof Omit<ServiceCategoryRowData, 'id'>, value: string) => {
     console.log(`=== SERVICE CATEGORY ROW UPDATE ===`);
     console.log(`ServiceCategories - updating row ${id}, level ${level}, value:`, value);
     
+    const numValue = value ? parseInt(value, 10) : null;
+    
     setCategoryRows(prev => {
-      const updatedRows = prev.map(row => {
+      return prev.map(row => {
         if (row.id === id) {
-          const updatedRow = { ...row, [level]: value };
+          const updatedRow = { ...row, [level]: numValue };
           
           // Reset child categories when parent changes
           if (level === 'level1') {
@@ -122,9 +120,6 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
         }
         return row;
       });
-      
-      console.log('ServiceCategories - all rows after update:', JSON.stringify(updatedRows, null, 2));
-      return updatedRows;
     });
   };
 
@@ -172,7 +167,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
     return Object.keys(categoryCount).filter(key => categoryCount[key] > 1);
   };
 
-  const isDuplicate = (row: ServiceCategoryRow) => {
+  const isDuplicate = (row: ServiceCategoryRowData) => {
     if (!row.level1 || !row.level2 || !row.level3) return false;
     const key = `${row.level1}-${row.level2}-${row.level3}`;
     return getDuplicates().includes(key);
@@ -221,9 +216,8 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level1?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value, 10) : null;
-                      console.log(`ServiceCategories - Select level1 changed for row ${row.id}:`, numValue);
-                      updateCategoryRow(row.id, 'level1', numValue);
+                      console.log(`ServiceCategories - Select level1 changed for row ${row.id}:`, value);
+                      updateCategoryRow(row.id, 'level1', value);
                     }}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
@@ -240,9 +234,8 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level2?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value, 10) : null;
-                      console.log(`ServiceCategories - Select level2 changed for row ${row.id}:`, numValue);
-                      updateCategoryRow(row.id, 'level2', numValue);
+                      console.log(`ServiceCategories - Select level2 changed for row ${row.id}:`, value);
+                      updateCategoryRow(row.id, 'level2', value);
                     }}
                     disabled={!row.level1}
                   >
@@ -260,9 +253,8 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                   <Select 
                     value={row.level3?.toString() || ''} 
                     onValueChange={(value) => {
-                      const numValue = value ? parseInt(value, 10) : null;
-                      console.log(`ServiceCategories - Select level3 changed for row ${row.id}:`, numValue);
-                      updateCategoryRow(row.id, 'level3', numValue);
+                      console.log(`ServiceCategories - Select level3 changed for row ${row.id}:`, value);
+                      updateCategoryRow(row.id, 'level3', value);
                     }}
                     disabled={!row.level2}
                   >

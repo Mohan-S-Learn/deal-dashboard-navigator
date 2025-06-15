@@ -16,12 +16,20 @@ interface GeographyTableSectionProps {
   onDataChange: (data: any[]) => void;
 }
 
+interface GeographyRowData {
+  id: string;
+  geographyId: number | null;
+  region: string;
+  country: string;
+  city: string;
+}
+
 export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   geographies,
   onDataChange
 }) => {
-  const [selectedRows, setSelectedRows] = useState<SelectedGeographyRow[]>([
-    { id: '1', region: '', country: '', city: '' }
+  const [selectedRows, setSelectedRows] = useState<GeographyRowData[]>([
+    { id: '1', geographyId: null, region: '', country: '', city: '' }
   ]);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -31,11 +39,9 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
       if (isInitialized) return;
       
       try {
-        // Get current URL to extract dealId and quoteName
         const currentPath = window.location.pathname;
         const pathParts = currentPath.split('/');
         
-        // Assuming URL structure is /deal-master/{dealId}/{quoteName}
         if (pathParts.length >= 4 && pathParts[1] === 'deal-master') {
           const dealId = pathParts[2];
           const quoteName = decodeURIComponent(pathParts[3]);
@@ -65,6 +71,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
               const geo = item.Geography as any;
               return {
                 id: (index + 1).toString(),
+                geographyId: item.geography_id,
                 region: geo?.region || '',
                 country: geo?.country || '',
                 city: geo?.city || ''
@@ -73,8 +80,6 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
             
             setSelectedRows(loadedRows);
             console.log('Geography - Set loaded rows:', loadedRows);
-          } else {
-            console.log('Geography - No existing data found, using default');
           }
         }
       } catch (error) {
@@ -91,10 +96,16 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   useEffect(() => {
     if (!isInitialized) return;
     
+    // Convert to the format expected by save function: array of geography IDs
+    const validGeographyIds = selectedRows
+      .filter(row => row.geographyId !== null)
+      .map(row => row.geographyId);
+    
     console.log('=== GEOGRAPHY DATA CHANGE ===');
-    console.log('Geography - current selectedRows:', JSON.stringify(selectedRows, null, 2));
-    console.log('Geography - sending data to parent:', selectedRows);
-    onDataChange(selectedRows);
+    console.log('Geography - selectedRows:', selectedRows);
+    console.log('Geography - sending geography IDs to parent:', validGeographyIds);
+    
+    onDataChange(validGeographyIds);
   }, [selectedRows, onDataChange, isInitialized]);
 
   // Group geographies by region and country
@@ -126,37 +137,73 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
     return region && country ? groupedGeographies[region]?.[country] || [] : [];
   };
 
-  const updateRow = (id: string, field: keyof SelectedGeographyRow, value: string) => {
+  const updateRow = (id: string, field: keyof GeographyRowData, value: string | number) => {
     console.log(`=== GEOGRAPHY ROW UPDATE ===`);
     console.log(`Geography - updating row ${id}, field ${field}, value:`, value);
     
     setSelectedRows(prev => {
-      const updatedRows = prev.map(row => {
+      return prev.map(row => {
         if (row.id === id) {
-          const updatedRow = { ...row, [field]: value };
-          
-          // Reset dependent fields when parent changes
-          if (field === 'region') {
-            updatedRow.country = '';
-            updatedRow.city = '';
+          if (field === 'geographyId') {
+            // When selecting a specific geography, update all fields
+            const selectedGeo = geographies.find(g => g.id === value);
+            if (selectedGeo) {
+              const updatedRow = {
+                ...row,
+                geographyId: selectedGeo.id,
+                region: selectedGeo.region,
+                country: selectedGeo.country,
+                city: selectedGeo.city
+              };
+              console.log(`Geography - updated row with geography:`, updatedRow);
+              return updatedRow;
+            }
+          } else if (field === 'region') {
+            // Reset dependent fields when region changes
+            const updatedRow = {
+              ...row,
+              region: value as string,
+              country: '',
+              city: '',
+              geographyId: null
+            };
+            console.log(`Geography - updated row with region:`, updatedRow);
+            return updatedRow;
           } else if (field === 'country') {
-            updatedRow.city = '';
+            // Reset city when country changes
+            const updatedRow = {
+              ...row,
+              country: value as string,
+              city: '',
+              geographyId: null
+            };
+            console.log(`Geography - updated row with country:`, updatedRow);
+            return updatedRow;
+          } else if (field === 'city') {
+            // Find the matching geography when city is selected
+            const matchingGeo = geographies.find(g => 
+              g.region === row.region && 
+              g.country === row.country && 
+              g.city === value
+            );
+            const updatedRow = {
+              ...row,
+              city: value as string,
+              geographyId: matchingGeo ? matchingGeo.id : null
+            };
+            console.log(`Geography - updated row with city:`, updatedRow);
+            return updatedRow;
           }
-          
-          console.log(`Geography - updated row result:`, updatedRow);
-          return updatedRow;
         }
         return row;
       });
-      
-      console.log('Geography - all rows after update:', JSON.stringify(updatedRows, null, 2));
-      return updatedRows;
     });
   };
 
   const addRows = (count: number) => {
     const newRows = Array.from({ length: count }, (_, i) => ({
       id: Date.now().toString() + i,
+      geographyId: null,
       region: '',
       country: '',
       city: ''
@@ -179,6 +226,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
       setSelectedRows(prev => prev.map((row, index) => 
         index === 0 ? row : {
           ...row,
+          geographyId: firstRow.geographyId,
           region: firstRow.region,
           country: firstRow.country,
           city: firstRow.city
@@ -188,20 +236,18 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   };
 
   const getDuplicates = () => {
-    const valueCount: Record<string, number> = {};
+    const geographyCount: Record<number, number> = {};
     selectedRows.forEach(row => {
-      if (row.region && row.country && row.city) {
-        const key = `${row.region}-${row.country}-${row.city}`;
-        valueCount[key] = (valueCount[key] || 0) + 1;
+      if (row.geographyId) {
+        geographyCount[row.geographyId] = (geographyCount[row.geographyId] || 0) + 1;
       }
     });
-    return Object.keys(valueCount).filter(key => valueCount[key] > 1);
+    return Object.keys(geographyCount).map(Number).filter(geoId => geographyCount[geoId] > 1);
   };
 
-  const isDuplicate = (row: SelectedGeographyRow) => {
-    if (!row.region || !row.country || !row.city) return false;
-    const key = `${row.region}-${row.country}-${row.city}`;
-    return getDuplicates().includes(key);
+  const isDuplicate = (row: GeographyRowData) => {
+    if (!row.geographyId) return false;
+    return getDuplicates().includes(row.geographyId);
   };
 
   const duplicates = getDuplicates();
