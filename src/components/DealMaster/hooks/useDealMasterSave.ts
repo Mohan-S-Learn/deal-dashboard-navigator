@@ -137,9 +137,12 @@ export const useDealMasterSave = () => {
       await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing geography records');
 
-      // Filter out empty geography rows and get their IDs
+      // Filter out empty geography rows - more lenient validation
       const validGeographyRows = geographyTableData.filter(row => {
-        const hasData = row && row.region && row.country && row.city;
+        const hasData = row && 
+          row.region && row.region.trim() !== '' && 
+          row.country && row.country.trim() !== '' && 
+          row.city && row.city.trim() !== '';
         console.log('Geography row validation:', row, 'hasData:', hasData);
         return hasData;
       });
@@ -207,9 +210,13 @@ export const useDealMasterSave = () => {
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing category records');
 
-      // Filter out incomplete category rows
+      // Filter out incomplete category rows - require at least level1
       const validCategoryRows = categoryTableData.filter(row => {
-        const hasLevel1 = row && row.level1 && row.level1 !== null && row.level1 !== '';
+        const hasLevel1 = row && 
+          row.level1 !== null && 
+          row.level1 !== undefined && 
+          row.level1 !== '' && 
+          !isNaN(parseInt(row.level1.toString()));
         console.log('Category row validation:', row, 'hasLevel1:', hasLevel1);
         return hasLevel1;
       });
@@ -222,8 +229,10 @@ export const useDealMasterSave = () => {
             Deal_Id: dealId,
             Quote_Name: quoteName,
             category_level_1_id: parseInt(row.level1.toString()),
-            category_level_2_id: row.level2 && row.level2 !== null && row.level2 !== '' ? parseInt(row.level2.toString()) : null,
-            category_level_3_id: row.level3 && row.level3 !== null && row.level3 !== '' ? parseInt(row.level3.toString()) : null,
+            category_level_2_id: row.level2 && row.level2 !== null && row.level2 !== '' && !isNaN(parseInt(row.level2.toString())) 
+              ? parseInt(row.level2.toString()) : null,
+            category_level_3_id: row.level3 && row.level3 !== null && row.level3 !== '' && !isNaN(parseInt(row.level3.toString())) 
+              ? parseInt(row.level3.toString()) : null,
           };
           console.log(`Category insert for row ${index}:`, insert);
           return insert;

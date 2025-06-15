@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Trash2, Copy, AlertTriangle } from 'lucide-react';
 import { Geography, SelectedGeographyRow } from '../types';
 import { AddRowsDialog } from './AddRowsDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GeographyTableSectionProps {
   geographies: Geography[];
@@ -22,14 +23,79 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   const [selectedRows, setSelectedRows] = useState<SelectedGeographyRow[]>([
     { id: '1', region: '', country: '', city: '' }
   ]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load existing data from database
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (isInitialized) return;
+      
+      try {
+        // Get current URL to extract dealId and quoteName
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/');
+        
+        // Assuming URL structure is /deal-master/{dealId}/{quoteName}
+        if (pathParts.length >= 4 && pathParts[1] === 'deal-master') {
+          const dealId = pathParts[2];
+          const quoteName = decodeURIComponent(pathParts[3]);
+          
+          console.log('Geography - Loading existing data for:', { dealId, quoteName });
+          
+          const { data: existingGeographies, error } = await supabase
+            .from('QuoteGeography')
+            .select(`
+              geography_id,
+              Geography (
+                id,
+                region,
+                country,
+                city
+              )
+            `)
+            .eq('Deal_Id', dealId)
+            .eq('Quote_Name', quoteName);
+
+          if (error) {
+            console.error('Geography - Error loading existing data:', error);
+          } else if (existingGeographies && existingGeographies.length > 0) {
+            console.log('Geography - Found existing data:', existingGeographies);
+            
+            const loadedRows = existingGeographies.map((item, index) => {
+              const geo = item.Geography as any;
+              return {
+                id: (index + 1).toString(),
+                region: geo?.region || '',
+                country: geo?.country || '',
+                city: geo?.city || ''
+              };
+            });
+            
+            setSelectedRows(loadedRows);
+            console.log('Geography - Set loaded rows:', loadedRows);
+          } else {
+            console.log('Geography - No existing data found, using default');
+          }
+        }
+      } catch (error) {
+        console.error('Geography - Error in loadExistingData:', error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    loadExistingData();
+  }, [isInitialized]);
 
   // Pass data back to parent whenever it changes
   useEffect(() => {
+    if (!isInitialized) return;
+    
     console.log('=== GEOGRAPHY DATA CHANGE ===');
     console.log('Geography - current selectedRows:', JSON.stringify(selectedRows, null, 2));
     console.log('Geography - sending data to parent:', selectedRows);
     onDataChange(selectedRows);
-  }, [selectedRows, onDataChange]);
+  }, [selectedRows, onDataChange, isInitialized]);
 
   // Group geographies by region and country
   const groupedGeographies = useMemo(() => {

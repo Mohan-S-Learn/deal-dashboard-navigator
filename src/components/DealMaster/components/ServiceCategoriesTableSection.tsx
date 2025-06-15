@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Trash2, Copy, AlertTriangle } from 'lucide-react';
 import { ServiceCategory, SelectedCategories } from '../types';
 import { AddRowsDialog } from './AddRowsDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ServiceCategoriesTableSectionProps {
   serviceCategories: ServiceCategory[];
@@ -29,14 +30,68 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   const [categoryRows, setCategoryRows] = useState<ServiceCategoryRow[]>([
     { id: '1', level1: null, level2: null, level3: null }
   ]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load existing data from parent component props and database
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (isInitialized) return;
+      
+      try {
+        // Get current URL to extract dealId and quoteName
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/');
+        
+        // Assuming URL structure is /deal-master/{dealId}/{quoteName}
+        if (pathParts.length >= 4 && pathParts[1] === 'deal-master') {
+          const dealId = pathParts[2];
+          const quoteName = decodeURIComponent(pathParts[3]);
+          
+          console.log('ServiceCategories - Loading existing data for:', { dealId, quoteName });
+          
+          const { data: existingCategories, error } = await supabase
+            .from('QuoteServiceCategory')
+            .select('*')
+            .eq('Deal_Id', dealId)
+            .eq('Quote_Name', quoteName);
+
+          if (error) {
+            console.error('ServiceCategories - Error loading existing data:', error);
+          } else if (existingCategories && existingCategories.length > 0) {
+            console.log('ServiceCategories - Found existing data:', existingCategories);
+            
+            const loadedRows = existingCategories.map((cat, index) => ({
+              id: (index + 1).toString(),
+              level1: cat.category_level_1_id,
+              level2: cat.category_level_2_id,
+              level3: cat.category_level_3_id
+            }));
+            
+            setCategoryRows(loadedRows);
+            console.log('ServiceCategories - Set loaded rows:', loadedRows);
+          } else {
+            console.log('ServiceCategories - No existing data found, using default');
+          }
+        }
+      } catch (error) {
+        console.error('ServiceCategories - Error in loadExistingData:', error);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    loadExistingData();
+  }, [isInitialized]);
 
   // Pass data back to parent whenever it changes
   useEffect(() => {
+    if (!isInitialized) return;
+    
     console.log('=== SERVICE CATEGORY DATA CHANGE ===');
     console.log('ServiceCategories - current categoryRows:', JSON.stringify(categoryRows, null, 2));
     console.log('ServiceCategories - sending data to parent:', categoryRows);
     onDataChange(categoryRows);
-  }, [categoryRows, onDataChange]);
+  }, [categoryRows, onDataChange, isInitialized]);
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
     return serviceCategories.filter(cat => 
