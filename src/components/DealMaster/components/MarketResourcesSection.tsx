@@ -23,6 +23,13 @@ export const MarketResourcesSection: React.FC<MarketResourcesSectionProps> = ({
   onMarketChange,
   onResourceTypeChange
 }) => {
+  console.log('MarketResourcesSection - Props received:', {
+    quoteData,
+    markets: markets?.length,
+    resourceTypes: resourceTypes?.length,
+    selectedResourceTypes
+  });
+
   return (
     <Card>
       <CardHeader>
