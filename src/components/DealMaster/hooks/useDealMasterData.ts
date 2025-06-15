@@ -29,9 +29,8 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
 
   const loadMasterData = async () => {
     try {
-      console.log('useDealMasterData - Loading master data...');
+      console.log('=== LOADING MASTER DATA ===');
       
-      // Load all master data in parallel
       const [marketsResult, resourceTypesResult, geographiesResult, categoriesResult] = await Promise.all([
         supabase.from('Market').select('*').order('name'),
         supabase.from('ResourceType').select('*').order('name'),
@@ -39,13 +38,18 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         supabase.from('ServiceCategory').select('*').order('level, name')
       ]);
 
+      console.log('Markets loaded:', marketsResult.data?.length || 0);
+      console.log('Resource types loaded:', resourceTypesResult.data?.length || 0);
+      console.log('Geographies loaded:', geographiesResult.data?.length || 0);
+      console.log('Service categories loaded:', categoriesResult.data?.length || 0);
+
       setMarkets(marketsResult.data || []);
       setResourceTypes(resourceTypesResult.data || []);
       setGeographies(geographiesResult.data || []);
       setServiceCategories(categoriesResult.data || []);
       
-      console.log('useDealMasterData - Master data loaded successfully');
       setMasterDataLoaded(true);
+      console.log('Master data loading completed');
     } catch (error) {
       console.error('Error loading master data:', error);
       toast({
@@ -58,100 +62,124 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
 
   const loadQuoteData = async () => {
     try {
-      console.log('useDealMasterData - Loading quote data for:', { dealId, quoteName });
+      console.log('=== LOADING QUOTE DATA ===');
+      console.log('Deal ID:', dealId, 'Quote Name:', quoteName);
       
-      // Load all quote-related data in parallel
-      const [quoteResult, resourceTypeResult, geographyResult, categoryResult, volumeResult] = await Promise.all([
-        supabase
-          .from('Quotes')
-          .select('*')
-          .eq('Deal_Id', dealId)
-          .eq('Quote_Name', quoteName)
-          .maybeSingle(),
-        
-        supabase
-          .from('QuoteResourceType')
-          .select('resource_type_id')
-          .eq('Deal_Id', dealId)
-          .eq('Quote_Name', quoteName),
-        
-        supabase
-          .from('QuoteGeography')
-          .select('geography_id')
-          .eq('Deal_Id', dealId)
-          .eq('Quote_Name', quoteName),
-        
-        supabase
-          .from('QuoteServiceCategory')
-          .select('*')
-          .eq('Deal_Id', dealId)
-          .eq('Quote_Name', quoteName)
-          .maybeSingle(),
-        
-        supabase
-          .from('VolumeDiscount')
-          .select('*')
-          .eq('Deal_Id', dealId)
-          .eq('Quote_Name', quoteName)
-          .order('range_start')
-      ]);
+      // Load quote basic data
+      console.log('Loading main quote data...');
+      const { data: quoteResult, error: quoteError } = await supabase
+        .from('Quotes')
+        .select('*')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName)
+        .maybeSingle();
 
-      // Process quote data
-      if (quoteResult.data) {
+      if (quoteError) {
+        console.error('Quote loading error:', quoteError);
+        throw quoteError;
+      }
+
+      if (quoteResult) {
+        console.log('Raw quote data from database:', quoteResult);
+        
         const loadedQuoteData: QuoteData = {
-          knowledge_transition_start_date: quoteResult.data.knowledge_transition_start_date ? new Date(quoteResult.data.knowledge_transition_start_date) : null,
-          knowledge_transition_end_date: quoteResult.data.knowledge_transition_end_date ? new Date(quoteResult.data.knowledge_transition_end_date) : null,
-          steady_state_start_date: quoteResult.data.steady_state_start_date ? new Date(quoteResult.data.steady_state_start_date) : null,
-          steady_state_end_date: quoteResult.data.steady_state_end_date ? new Date(quoteResult.data.steady_state_end_date) : null,
-          overall_duration_months: quoteResult.data.overall_duration_months,
-          market_id: quoteResult.data.market_id,
-          deal_discount_amount: quoteResult.data.deal_discount_amount,
-          deal_discount_percent: quoteResult.data.deal_discount_percent,
-          travel_percent: quoteResult.data.travel_percent,
-          training_percent: quoteResult.data.training_percent,
-          other_costs_percent: quoteResult.data.other_costs_percent,
-          infrastructure_percent: quoteResult.data.infrastructure_percent,
-          compliance_percent: quoteResult.data.compliance_percent,
-          licenses_percent: quoteResult.data.licenses_percent,
+          knowledge_transition_start_date: quoteResult.knowledge_transition_start_date ? new Date(quoteResult.knowledge_transition_start_date) : null,
+          knowledge_transition_end_date: quoteResult.knowledge_transition_end_date ? new Date(quoteResult.knowledge_transition_end_date) : null,
+          steady_state_start_date: quoteResult.steady_state_start_date ? new Date(quoteResult.steady_state_start_date) : null,
+          steady_state_end_date: quoteResult.steady_state_end_date ? new Date(quoteResult.steady_state_end_date) : null,
+          overall_duration_months: quoteResult.overall_duration_months,
+          market_id: quoteResult.market_id,
+          deal_discount_amount: quoteResult.deal_discount_amount,
+          deal_discount_percent: quoteResult.deal_discount_percent,
+          travel_percent: quoteResult.travel_percent,
+          training_percent: quoteResult.training_percent,
+          other_costs_percent: quoteResult.other_costs_percent,
+          infrastructure_percent: quoteResult.infrastructure_percent,
+          compliance_percent: quoteResult.compliance_percent,
+          licenses_percent: quoteResult.licenses_percent,
         };
         
-        console.log('useDealMasterData - Successfully loaded quote data:', loadedQuoteData);
+        console.log('Processed quote data:', loadedQuoteData);
         setQuoteData(loadedQuoteData);
       } else {
-        console.log('useDealMasterData - No quote found');
+        console.log('No quote data found in database');
         setQuoteData(null);
       }
 
-      // Process resource types
-      const loadedResourceTypes = resourceTypeResult.data?.map(rt => rt.resource_type_id) || [];
-      console.log('useDealMasterData - Loaded resource types:', loadedResourceTypes);
-      setSelectedResourceTypes(loadedResourceTypes);
+      // Load resource types
+      console.log('Loading resource types...');
+      const { data: resourceTypeResult, error: rtError } = await supabase
+        .from('QuoteResourceType')
+        .select('resource_type_id')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName);
 
-      // Process geographies
-      const loadedGeographies = geographyResult.data?.map(g => g.geography_id) || [];
-      console.log('useDealMasterData - Loaded geographies:', loadedGeographies);
-      setSelectedGeographies(loadedGeographies);
+      if (rtError) {
+        console.error('Resource type loading error:', rtError);
+      } else {
+        const loadedResourceTypes = resourceTypeResult?.map(rt => rt.resource_type_id) || [];
+        console.log('Loaded resource types:', loadedResourceTypes);
+        setSelectedResourceTypes(loadedResourceTypes);
+      }
 
-      // Process categories
-      if (categoryResult.data) {
+      // Load geographies
+      console.log('Loading geographies...');
+      const { data: geographyResult, error: geoError } = await supabase
+        .from('QuoteGeography')
+        .select('geography_id')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName);
+
+      if (geoError) {
+        console.error('Geography loading error:', geoError);
+      } else {
+        const loadedGeographies = geographyResult?.map(g => g.geography_id) || [];
+        console.log('Loaded geographies:', loadedGeographies);
+        setSelectedGeographies(loadedGeographies);
+      }
+
+      // Load categories
+      console.log('Loading categories...');
+      const { data: categoryResult, error: catError } = await supabase
+        .from('QuoteServiceCategory')
+        .select('*')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName)
+        .maybeSingle();
+
+      if (catError) {
+        console.error('Category loading error:', catError);
+      } else if (categoryResult) {
         const loadedCategories: SelectedCategories = {
-          level1: categoryResult.data.category_level_1_id,
-          level2: categoryResult.data.category_level_2_id,
-          level3: categoryResult.data.category_level_3_id,
+          level1: categoryResult.category_level_1_id,
+          level2: categoryResult.category_level_2_id,
+          level3: categoryResult.category_level_3_id,
         };
-        console.log('useDealMasterData - Loaded categories:', loadedCategories);
+        console.log('Loaded categories:', loadedCategories);
         setSelectedCategories(loadedCategories);
       } else {
-        console.log('useDealMasterData - No categories found');
+        console.log('No categories found');
         setSelectedCategories(null);
       }
 
-      // Process volume discounts
-      const loadedVolumeDiscounts = volumeResult.data || [];
-      console.log('useDealMasterData - Loaded volume discounts:', loadedVolumeDiscounts);
-      setVolumeDiscounts(loadedVolumeDiscounts);
+      // Load volume discounts
+      console.log('Loading volume discounts...');
+      const { data: volumeResult, error: volError } = await supabase
+        .from('VolumeDiscount')
+        .select('*')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName)
+        .order('range_start');
 
-      console.log('useDealMasterData - All quote data loaded successfully');
+      if (volError) {
+        console.error('Volume discount loading error:', volError);
+      } else {
+        const loadedVolumeDiscounts = volumeResult || [];
+        console.log('Loaded volume discounts:', loadedVolumeDiscounts);
+        setVolumeDiscounts(loadedVolumeDiscounts);
+      }
+
+      console.log('=== QUOTE DATA LOADING COMPLETED ===');
 
     } catch (error) {
       console.error('Error loading quote data:', error);
@@ -165,14 +193,16 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
     }
   };
 
-  // Load master data when component mounts
+  // Load master data on mount
   useEffect(() => {
+    console.log('useDealMasterData - Starting master data load');
     loadMasterData();
   }, [dealId, quoteName]);
 
-  // Load quote data after master data is loaded
+  // Load quote data after master data is ready
   useEffect(() => {
     if (masterDataLoaded) {
+      console.log('useDealMasterData - Master data ready, loading quote data');
       loadQuoteData();
     }
   }, [masterDataLoaded, dealId, quoteName]);
