@@ -106,7 +106,9 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     console.log('Quote Name:', quoteName);
     console.log('Raw geography table data:', geographyTableData);
     console.log('Raw geography table data type:', typeof geographyTableData);
+    console.log('Raw geography table data is array:', Array.isArray(geographyTableData));
     console.log('Raw geography table data length:', geographyTableData?.length);
+    console.log('Raw geography table data content:', JSON.stringify(geographyTableData, null, 2));
     console.log('Raw category table data:', categoryTableData);
     console.log('Quote data:', quoteData);
     console.log('Selected resource types:', selectedResourceTypes);

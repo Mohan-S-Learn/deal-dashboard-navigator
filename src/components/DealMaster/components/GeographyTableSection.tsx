@@ -32,6 +32,11 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   } = useGeographyTableData(geographies, onDataChange);
 
   console.log('GeographyTableSection - Current selectedRows:', selectedRows);
+  console.log('GeographyTableSection - Valid geography IDs being sent:', 
+    selectedRows
+      .filter(row => row.geographyId !== null && row.geographyId !== undefined)
+      .map(row => row.geographyId)
+  );
 
   const duplicates = getDuplicates();
 
