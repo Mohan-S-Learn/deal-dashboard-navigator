@@ -13,34 +13,14 @@ import {
 } from '../types';
 
 export const useDealMasterData = (dealId: string, quoteName: string) => {
-  const [quoteData, setQuoteData] = useState<QuoteData>({
-    knowledge_transition_start_date: null,
-    knowledge_transition_end_date: null,
-    steady_state_start_date: null,
-    steady_state_end_date: null,
-    overall_duration_months: null,
-    market_id: null,
-    deal_discount_amount: null,
-    deal_discount_percent: null,
-    travel_percent: null,
-    training_percent: null,
-    other_costs_percent: null,
-    infrastructure_percent: null,
-    compliance_percent: null,
-    licenses_percent: null,
-  });
-
   const [markets, setMarkets] = useState<Market[]>([]);
   const [resourceTypes, setResourceTypes] = useState<ResourceType[]>([]);
   const [geographies, setGeographies] = useState<Geography[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
+  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   const [selectedResourceTypes, setSelectedResourceTypes] = useState<number[]>([]);
   const [selectedGeographies, setSelectedGeographies] = useState<number[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<SelectedCategories>({
-    level1: null,
-    level2: null,
-    level3: null,
-  });
+  const [selectedCategories, setSelectedCategories] = useState<SelectedCategories | null>(null);
   const [volumeDiscounts, setVolumeDiscounts] = useState<VolumeDiscountRange[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -90,12 +70,12 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
-        .single();
+        .maybeSingle();
 
-      console.log('useDealMasterData - Loaded quote:', quote);
+      console.log('useDealMasterData - Raw quote from DB:', quote);
 
       if (quote) {
-        const loadedQuoteData = {
+        const loadedQuoteData: QuoteData = {
           knowledge_transition_start_date: quote.knowledge_transition_start_date ? new Date(quote.knowledge_transition_start_date) : null,
           knowledge_transition_end_date: quote.knowledge_transition_end_date ? new Date(quote.knowledge_transition_end_date) : null,
           steady_state_start_date: quote.steady_state_start_date ? new Date(quote.steady_state_start_date) : null,
@@ -112,8 +92,11 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
           licenses_percent: quote.licenses_percent,
         };
         
-        console.log('useDealMasterData - Setting quote data:', loadedQuoteData);
+        console.log('useDealMasterData - Parsed quote data:', loadedQuoteData);
         setQuoteData(loadedQuoteData);
+      } else {
+        console.log('useDealMasterData - No quote found, setting to null');
+        setQuoteData(null);
       }
 
       // Load selected resource types
@@ -124,7 +107,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         .eq('Quote_Name', quoteName);
       
       const loadedResourceTypes = resourceTypeData?.map(rt => rt.resource_type_id) || [];
-      console.log('useDealMasterData - Setting resource types:', loadedResourceTypes);
+      console.log('useDealMasterData - Loaded resource types:', loadedResourceTypes);
       setSelectedResourceTypes(loadedResourceTypes);
 
       // Load selected geographies
@@ -135,7 +118,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         .eq('Quote_Name', quoteName);
       
       const loadedGeographies = geographyData?.map(g => g.geography_id) || [];
-      console.log('useDealMasterData - Setting geographies:', loadedGeographies);
+      console.log('useDealMasterData - Loaded geographies:', loadedGeographies);
       setSelectedGeographies(loadedGeographies);
 
       // Load service categories
@@ -144,16 +127,19 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
-        .single();
+        .maybeSingle();
       
       if (categoryData) {
-        const loadedCategories = {
+        const loadedCategories: SelectedCategories = {
           level1: categoryData.category_level_1_id,
           level2: categoryData.category_level_2_id,
           level3: categoryData.category_level_3_id,
         };
-        console.log('useDealMasterData - Setting categories:', loadedCategories);
+        console.log('useDealMasterData - Loaded categories:', loadedCategories);
         setSelectedCategories(loadedCategories);
+      } else {
+        console.log('useDealMasterData - No categories found');
+        setSelectedCategories(null);
       }
 
       // Load volume discounts
@@ -165,7 +151,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
         .order('range_start');
       
       const loadedVolumeDiscounts = volumeData || [];
-      console.log('useDealMasterData - Setting volume discounts:', loadedVolumeDiscounts);
+      console.log('useDealMasterData - Loaded volume discounts:', loadedVolumeDiscounts);
       setVolumeDiscounts(loadedVolumeDiscounts);
 
     } catch (error) {

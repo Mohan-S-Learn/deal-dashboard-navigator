@@ -40,38 +40,41 @@ export const useDealMasterState = (
   const [geographyTableData, setGeographyTableData] = useState<any[]>([]);
   const [categoryTableData, setCategoryTableData] = useState<any[]>([]);
 
-  // Update state when loaded data changes
+  // Update state when loaded data changes - with proper state update
   useEffect(() => {
     if (loadedQuoteData) {
-      console.log('useDealMasterState - Setting loaded quote data:', loadedQuoteData);
-      setQuoteData(loadedQuoteData);
+      console.log('useDealMasterState - Updating quote data with loaded data:', loadedQuoteData);
+      setQuoteData(prevData => ({
+        ...prevData,
+        ...loadedQuoteData
+      }));
     }
   }, [loadedQuoteData]);
 
   useEffect(() => {
-    if (loadedSelectedResourceTypes) {
-      console.log('useDealMasterState - Setting loaded resource types:', loadedSelectedResourceTypes);
+    if (loadedSelectedResourceTypes && loadedSelectedResourceTypes.length > 0) {
+      console.log('useDealMasterState - Updating resource types:', loadedSelectedResourceTypes);
       setSelectedResourceTypes(loadedSelectedResourceTypes);
     }
   }, [loadedSelectedResourceTypes]);
 
   useEffect(() => {
-    if (loadedSelectedGeographies) {
-      console.log('useDealMasterState - Setting loaded geographies:', loadedSelectedGeographies);
+    if (loadedSelectedGeographies && loadedSelectedGeographies.length > 0) {
+      console.log('useDealMasterState - Updating geographies:', loadedSelectedGeographies);
       setSelectedGeographies(loadedSelectedGeographies);
     }
   }, [loadedSelectedGeographies]);
 
   useEffect(() => {
-    if (loadedSelectedCategories) {
-      console.log('useDealMasterState - Setting loaded categories:', loadedSelectedCategories);
+    if (loadedSelectedCategories && (loadedSelectedCategories.level1 || loadedSelectedCategories.level2 || loadedSelectedCategories.level3)) {
+      console.log('useDealMasterState - Updating categories:', loadedSelectedCategories);
       setSelectedCategories(loadedSelectedCategories);
     }
   }, [loadedSelectedCategories]);
 
   useEffect(() => {
-    if (loadedVolumeDiscounts) {
-      console.log('useDealMasterState - Setting loaded volume discounts:', loadedVolumeDiscounts);
+    if (loadedVolumeDiscounts && loadedVolumeDiscounts.length > 0) {
+      console.log('useDealMasterState - Updating volume discounts:', loadedVolumeDiscounts);
       setVolumeDiscounts(loadedVolumeDiscounts);
     }
   }, [loadedVolumeDiscounts]);
@@ -82,8 +85,11 @@ export const useDealMasterState = (
       quoteData.knowledge_transition_start_date,
       quoteData.steady_state_end_date
     );
-    setQuoteData(prev => ({ ...prev, overall_duration_months: duration }));
-  }, [quoteData.knowledge_transition_start_date, quoteData.steady_state_end_date]);
+    if (duration !== null && duration !== quoteData.overall_duration_months) {
+      console.log('useDealMasterState - Auto-calculating duration:', duration);
+      setQuoteData(prev => ({ ...prev, overall_duration_months: duration }));
+    }
+  }, [quoteData.knowledge_transition_start_date, quoteData.steady_state_end_date, quoteData.overall_duration_months]);
 
   return {
     quoteData,
