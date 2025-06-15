@@ -1,9 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateDuration } from '../utils/dateUtils';
 import { QuoteData, VolumeDiscountRange, SelectedCategories } from '../types';
 
-export const useDealMasterState = (dealId: string, quoteName: string) => {
+export const useDealMasterState = (
+  dealId: string, 
+  quoteName: string,
+  loadedQuoteData?: QuoteData,
+  loadedSelectedResourceTypes?: number[],
+  loadedSelectedGeographies?: number[],
+  loadedSelectedCategories?: SelectedCategories,
+  loadedVolumeDiscounts?: VolumeDiscountRange[]
+) => {
   const [quoteData, setQuoteData] = useState<QuoteData>({
     knowledge_transition_start_date: null,
     knowledge_transition_end_date: null,
@@ -31,6 +39,42 @@ export const useDealMasterState = (dealId: string, quoteName: string) => {
   const [volumeDiscounts, setVolumeDiscounts] = useState<VolumeDiscountRange[]>([]);
   const [geographyTableData, setGeographyTableData] = useState<any[]>([]);
   const [categoryTableData, setCategoryTableData] = useState<any[]>([]);
+
+  // Update state when loaded data changes
+  useEffect(() => {
+    if (loadedQuoteData) {
+      console.log('useDealMasterState - Setting loaded quote data:', loadedQuoteData);
+      setQuoteData(loadedQuoteData);
+    }
+  }, [loadedQuoteData]);
+
+  useEffect(() => {
+    if (loadedSelectedResourceTypes) {
+      console.log('useDealMasterState - Setting loaded resource types:', loadedSelectedResourceTypes);
+      setSelectedResourceTypes(loadedSelectedResourceTypes);
+    }
+  }, [loadedSelectedResourceTypes]);
+
+  useEffect(() => {
+    if (loadedSelectedGeographies) {
+      console.log('useDealMasterState - Setting loaded geographies:', loadedSelectedGeographies);
+      setSelectedGeographies(loadedSelectedGeographies);
+    }
+  }, [loadedSelectedGeographies]);
+
+  useEffect(() => {
+    if (loadedSelectedCategories) {
+      console.log('useDealMasterState - Setting loaded categories:', loadedSelectedCategories);
+      setSelectedCategories(loadedSelectedCategories);
+    }
+  }, [loadedSelectedCategories]);
+
+  useEffect(() => {
+    if (loadedVolumeDiscounts) {
+      console.log('useDealMasterState - Setting loaded volume discounts:', loadedVolumeDiscounts);
+      setVolumeDiscounts(loadedVolumeDiscounts);
+    }
+  }, [loadedVolumeDiscounts]);
 
   // Auto-calculate duration when dates change
   useEffect(() => {

@@ -15,6 +15,11 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     resourceTypes,
     geographies,
     serviceCategories,
+    quoteData: loadedQuoteData,
+    selectedResourceTypes: loadedResourceTypes,
+    selectedGeographies: loadedGeographies,
+    selectedCategories: loadedCategories,
+    volumeDiscounts: loadedVolumeDiscounts,
     loading,
     loadMasterData,
     loadQuoteData
@@ -35,7 +40,15 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     setGeographyTableData,
     categoryTableData,
     setCategoryTableData,
-  } = useDealMasterState(dealId, quoteName);
+  } = useDealMasterState(
+    dealId, 
+    quoteName,
+    loadedQuoteData,
+    loadedResourceTypes,
+    loadedGeographies,
+    loadedCategories,
+    loadedVolumeDiscounts
+  );
 
   const {
     handleDateChange,
@@ -59,6 +72,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   const { saveData } = useDealMasterSave();
 
   useEffect(() => {
+    console.log('DealMaster - Loading data for:', { dealId, quoteName });
     loadMasterData();
     loadQuoteData();
   }, [dealId, quoteName]);
@@ -68,7 +82,6 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     console.log('Raw geography table data:', geographyTableData);
     console.log('Raw category table data:', categoryTableData);
 
-    // Pass the table data directly to the save function
     saveData(
       dealId,
       quoteName,
