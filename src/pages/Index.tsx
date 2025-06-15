@@ -5,6 +5,8 @@ import Login from '../components/Login';
 import Dashboard from '../components/Dashboard';
 import VersionManagement from '../components/VersionManagement';
 import DealMaster from '../components/DealMaster';
+import Revenue from '../components/Revenue/Revenue';
+import ResourceEfforts from '../components/ResourceEfforts/ResourceEfforts';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -16,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
 
-type View = 'login' | 'dashboard' | 'version-management' | 'deal-master';
+type View = 'login' | 'dashboard' | 'version-management' | 'deal-master' | 'revenue' | 'resource-efforts';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<View>('login');
@@ -47,6 +49,18 @@ const Index = () => {
   const handleBackToVersionManagement = () => {
     setCurrentView('version-management');
     setSelectedQuoteName('');
+  };
+
+  const handleBackToDealMaster = () => {
+    setCurrentView('deal-master');
+  };
+
+  const handleNavigateToRevenue = () => {
+    setCurrentView('revenue');
+  };
+
+  const handleNavigateToResourceEfforts = () => {
+    setCurrentView('resource-efforts');
   };
 
   const renderNavigation = () => {
@@ -100,18 +114,47 @@ const Index = () => {
                     </NavigationMenuItem>
                   )}
                   {selectedQuoteName && (
-                    <NavigationMenuItem>
-                      <Button
-                        variant={currentView === 'deal-master' ? 'default' : 'ghost'}
-                        className={`font-semibold transition-all duration-200 ${
-                          currentView === 'deal-master'
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
-                            : 'hover:bg-gray-100'
-                        }`}
-                      >
-                        Deal Master
-                      </Button>
-                    </NavigationMenuItem>
+                    <>
+                      <NavigationMenuItem>
+                        <Button
+                          variant={currentView === 'deal-master' ? 'default' : 'ghost'}
+                          onClick={handleBackToDealMaster}
+                          className={`font-semibold transition-all duration-200 ${
+                            currentView === 'deal-master'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          Deal Master
+                        </Button>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Button
+                          variant={currentView === 'revenue' ? 'default' : 'ghost'}
+                          onClick={handleNavigateToRevenue}
+                          className={`font-semibold transition-all duration-200 ${
+                            currentView === 'revenue'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          Revenue
+                        </Button>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Button
+                          variant={currentView === 'resource-efforts' ? 'default' : 'ghost'}
+                          onClick={handleNavigateToResourceEfforts}
+                          className={`font-semibold transition-all duration-200 ${
+                            currentView === 'resource-efforts'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          Resource Efforts
+                        </Button>
+                      </NavigationMenuItem>
+                    </>
                   )}
                 </NavigationMenuList>
               </NavigationMenu>
@@ -132,6 +175,10 @@ const Index = () => {
         return <VersionManagement dealId={selectedDealId} onBack={handleBackToDashboard} onQuoteClick={handleQuoteClick} />;
       case 'deal-master':
         return <DealMaster dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToVersionManagement} />;
+      case 'revenue':
+        return <Revenue dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToDealMaster} />;
+      case 'resource-efforts':
+        return <ResourceEfforts dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToDealMaster} />;
       default:
         return <Login onLogin={handleLogin} />;
     }
