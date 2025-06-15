@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import { QuoteResourceEffort, EffortInputMode } from '../types';
-import { ResourceSkill, CostCategory } from '../../Revenue/types';
+import { CostCategory } from '../../Revenue/types';
 import { ServiceCategory } from '../../DealMaster/types';
 
 interface ResourceEffortsTableProps {
   data: QuoteResourceEffort[];
-  resourceSkills: ResourceSkill[];
   costCategories: CostCategory[];
   serviceCategories: ServiceCategory[];
   inputMode: EffortInputMode;
@@ -20,7 +19,6 @@ interface ResourceEffortsTableProps {
 
 export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
   data,
-  resourceSkills,
   costCategories,
   serviceCategories,
   inputMode,
@@ -32,7 +30,8 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
   };
 
   const getResourceSkillName = (id: number) => {
-    return resourceSkills.find(rs => rs.id === id)?.name || 'N/A';
+    // Level 4 service categories are the resource skills
+    return serviceCategories.find(sc => sc.id === id && sc.level === 4)?.name || 'N/A';
   };
 
   const getCostCategoryName = (id?: number) => {
@@ -50,7 +49,7 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
 
   // Group data by year for summary
   const yearSummary = data.reduce((acc, item) => {
-    const key = `${item.service_category_level_1_id}-${item.service_category_level_2_id}-${item.service_category_level_3_id}-${item.resource_skill_id}-${item.experience_years}-${item.cost_category_id}-${item.effort_year}`;
+    const key = `${item.service_category_level_1_id}-${item.service_category_level_2_id}-${item.service_category_level_3_id}-${item.service_category_level_4_id}-${item.experience_years}-${item.cost_category_id}-${item.effort_year}`;
     if (!acc[key]) {
       acc[key] = {
         ...item,
@@ -69,7 +68,7 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
             <TableHead>Service Category L1</TableHead>
             <TableHead>Service Category L2</TableHead>
             <TableHead>Service Category L3</TableHead>
-            <TableHead>Resource Skill</TableHead>
+            <TableHead>Resource Skill (L4)</TableHead>
             <TableHead>Experience (Years)</TableHead>
             <TableHead>Cost Category</TableHead>
             <TableHead>Year</TableHead>
@@ -84,7 +83,7 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
               <TableCell>{getServiceCategoryName(item.service_category_level_1_id)}</TableCell>
               <TableCell>{getServiceCategoryName(item.service_category_level_2_id)}</TableCell>
               <TableCell>{getServiceCategoryName(item.service_category_level_3_id)}</TableCell>
-              <TableCell>{getResourceSkillName(item.resource_skill_id)}</TableCell>
+              <TableCell>{getResourceSkillName(item.service_category_level_4_id)}</TableCell>
               <TableCell>{item.experience_years}</TableCell>
               <TableCell>{getCostCategoryName(item.cost_category_id)}</TableCell>
               <TableCell>{item.effort_year}</TableCell>
@@ -128,7 +127,7 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
                 <TableHead>Service Category L1</TableHead>
                 <TableHead>Service Category L2</TableHead>
                 <TableHead>Service Category L3</TableHead>
-                <TableHead>Resource Skill</TableHead>
+                <TableHead>Resource Skill (L4)</TableHead>
                 <TableHead>Experience (Years)</TableHead>
                 <TableHead>Cost Category</TableHead>
                 <TableHead>Year</TableHead>
@@ -141,7 +140,7 @@ export const ResourceEffortsTable: React.FC<ResourceEffortsTableProps> = ({
                   <TableCell>{getServiceCategoryName(summary.service_category_level_1_id)}</TableCell>
                   <TableCell>{getServiceCategoryName(summary.service_category_level_2_id)}</TableCell>
                   <TableCell>{getServiceCategoryName(summary.service_category_level_3_id)}</TableCell>
-                  <TableCell>{getResourceSkillName(summary.resource_skill_id)}</TableCell>
+                  <TableCell>{getResourceSkillName(summary.service_category_level_4_id)}</TableCell>
                   <TableCell>{summary.experience_years}</TableCell>
                   <TableCell>{getCostCategoryName(summary.cost_category_id)}</TableCell>
                   <TableCell>{summary.effort_year}</TableCell>
