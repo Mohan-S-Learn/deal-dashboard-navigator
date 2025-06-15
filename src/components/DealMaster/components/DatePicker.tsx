@@ -60,13 +60,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, placeho
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 bg-white border shadow-lg z-50" align="start">
+      <PopoverContent 
+        className="w-auto p-0 bg-white border shadow-lg z-50 max-w-sm" 
+        align="start"
+        side="bottom"
+        sideOffset={4}
+      >
         <Calendar 
           mode="single" 
           selected={value || undefined} 
           onSelect={handleCalendarSelect} 
           initialFocus 
           defaultMonth={value || new Date()}
+          className="w-full"
         />
       </PopoverContent>
     </Popover>
