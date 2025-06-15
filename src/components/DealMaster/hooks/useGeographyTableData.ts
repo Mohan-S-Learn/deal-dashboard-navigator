@@ -65,8 +65,20 @@ export const useGeographyTableData = (
               };
             });
             
+            console.log('Geography - Setting loaded rows:', loadedRows);
             setSelectedRows(loadedRows);
-            console.log('Geography - Set loaded rows:', loadedRows);
+            
+            // Immediately notify parent with the loaded geography IDs
+            const validGeographyIds = loadedRows
+              .filter(row => row.geographyId !== null && row.geographyId !== undefined)
+              .map(row => row.geographyId as number);
+            
+            console.log('Geography - Notifying parent with loaded IDs:', validGeographyIds);
+            onDataChange(validGeographyIds);
+          } else {
+            console.log('Geography - No existing data found, using default empty row');
+            // Still notify parent with empty array
+            onDataChange([]);
           }
         }
       } catch (error) {
@@ -77,20 +89,21 @@ export const useGeographyTableData = (
     };
 
     loadExistingData();
-  }, [isInitialized]);
+  }, [isInitialized, onDataChange]);
 
-  // Send data to parent whenever it changes
+  // Send data to parent whenever selectedRows changes (but only after initialization)
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const validGeographyIds = selectedRows
       .filter(row => row.geographyId !== null && row.geographyId !== undefined)
       .map(row => row.geographyId as number);
     
-    console.log('Geography - Data change detected');
-    console.log('Geography - selectedRows:', selectedRows);
-    console.log('Geography - sending geography IDs to parent:', validGeographyIds);
+    console.log('Geography - selectedRows changed, sending to parent:', validGeographyIds);
+    console.log('Geography - Current selectedRows:', selectedRows);
     
     onDataChange(validGeographyIds);
-  }, [selectedRows, onDataChange]);
+  }, [selectedRows, onDataChange, isInitialized]);
 
   const updateRow = (id: string, field: keyof GeographyRowData, value: string | number) => {
     console.log(`Geography - Updating row ${id}, field ${field}, value:`, value);
