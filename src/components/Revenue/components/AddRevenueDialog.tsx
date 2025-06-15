@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QuoteRevenue, CostCategory } from '../types';
 import { ServiceCategory, Geography } from '../../DealMaster/types';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddRevenueDialogProps {
   open: boolean;
@@ -42,6 +44,81 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
     cb_cost_usd_per_hour: 0,
     margin_percent: 0,
   });
+
+  // Auto-populate benchmark rates when service categories and resource skill change
+  useEffect(() => {
+    const fetchBenchmarkRates = async () => {
+      if (!formData.service_category_level_4_id) return;
+
+      console.log('Fetching benchmark rates for:', {
+        service_category_level_1_id: formData.service_category_level_1_id,
+        service_category_level_2_id: formData.service_category_level_2_id,
+        service_category_level_3_id: formData.service_category_level_3_id,
+        service_category_level_4_id: formData.service_category_level_4_id,
+        experience_years: formData.experience_years,
+        geography_id: formData.geography_id
+      });
+
+      try {
+        let query = supabase
+          .from('BenchmarkRate')
+          .select('*')
+          .eq('service_category_level_4_id', formData.service_category_level_4_id)
+          .eq('experience_years', formData.experience_years);
+
+        // Add optional filters
+        if (formData.service_category_level_1_id) {
+          query = query.eq('service_category_level_1_id', formData.service_category_level_1_id);
+        }
+        if (formData.service_category_level_2_id) {
+          query = query.eq('service_category_level_2_id', formData.service_category_level_2_id);
+        }
+        if (formData.service_category_level_3_id) {
+          query = query.eq('service_category_level_3_id', formData.service_category_level_3_id);
+        }
+        if (formData.geography_id) {
+          query = query.eq('geography_id', formData.geography_id);
+        }
+
+        const { data: benchmarkRates, error } = await query;
+
+        if (error) {
+          console.error('Error fetching benchmark rates:', error);
+          return;
+        }
+
+        console.log('Found benchmark rates:', benchmarkRates);
+
+        if (benchmarkRates && benchmarkRates.length > 0) {
+          const rate = benchmarkRates[0]; // Use the first matching rate
+          setFormData(prev => ({
+            ...prev,
+            benchmark_rate_usd_per_hour: rate.benchmark_rate_usd_per_hour || 0,
+            cb_cost_usd_per_hour: rate.cb_cost_usd_per_hour || 0,
+            margin_percent: rate.margin_percent || 0,
+          }));
+          console.log('Auto-populated rates:', {
+            benchmark_rate: rate.benchmark_rate_usd_per_hour,
+            cb_cost: rate.cb_cost_usd_per_hour,
+            margin: rate.margin_percent
+          });
+        } else {
+          console.log('No matching benchmark rates found');
+        }
+      } catch (error) {
+        console.error('Error in fetchBenchmarkRates:', error);
+      }
+    };
+
+    fetchBenchmarkRates();
+  }, [
+    formData.service_category_level_1_id,
+    formData.service_category_level_2_id,
+    formData.service_category_level_3_id,
+    formData.service_category_level_4_id,
+    formData.experience_years,
+    formData.geography_id
+  ]);
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
     return serviceCategories.filter(cat => 
