@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
@@ -31,22 +30,57 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
     try {
       setLoading(true);
 
-      const [
-        resourceSkillsResult,
-        costCategoriesResult,
-        serviceCategoriesResult,
-        effortResult
-      ] = await Promise.all([
-        supabase.from('ResourceSkill').select('*').order('name'),
-        supabase.from('CostCategory').select('*').order('name'),
-        supabase.from('ServiceCategory').select('*').order('level, name'),
-        supabase.from('QuoteResourceEffort').select('*').eq('Deal_Id', dealId).eq('Quote_Name', quoteName).order('effort_year, effort_month')
-      ]);
+      // Mock data since tables don't exist yet
+      const mockResourceSkills: ResourceSkill[] = [
+        { id: 1, name: 'Programmer' },
+        { id: 2, name: 'Tester' },
+        { id: 3, name: 'Business Analyst' },
+        { id: 4, name: 'Project Manager' },
+        { id: 5, name: 'DevOps Engineer' },
+        { id: 6, name: 'UI/UX Designer' },
+        { id: 7, name: 'Data Analyst' },
+        { id: 8, name: 'Solution Architect' }
+      ];
 
-      setResourceSkills(resourceSkillsResult.data || []);
-      setCostCategories(costCategoriesResult.data || []);
-      setServiceCategories(serviceCategoriesResult.data || []);
-      setEffortData(effortResult.data || []);
+      const mockCostCategories: CostCategory[] = [
+        { id: 1, name: 'Development' },
+        { id: 2, name: 'Testing' },
+        { id: 3, name: 'Analysis' },
+        { id: 4, name: 'Management' },
+        { id: 5, name: 'Infrastructure' }
+      ];
+
+      const mockServiceCategories: ServiceCategory[] = [
+        { id: 1, name: 'Technology Services', level: 1, parent_id: null },
+        { id: 2, name: 'Application Development', level: 2, parent_id: 1 },
+        { id: 3, name: 'Web Development', level: 3, parent_id: 2 },
+        { id: 4, name: 'Mobile Development', level: 3, parent_id: 2 },
+        { id: 5, name: 'Business Services', level: 1, parent_id: null },
+        { id: 6, name: 'Consulting', level: 2, parent_id: 5 },
+        { id: 7, name: 'Strategy Consulting', level: 3, parent_id: 6 }
+      ];
+
+      const mockEffortData: QuoteResourceEffort[] = [
+        {
+          id: 1,
+          Deal_Id: dealId,
+          Quote_Name: quoteName,
+          service_category_level_1_id: 1,
+          service_category_level_2_id: 2,
+          service_category_level_3_id: 3,
+          resource_skill_id: 1,
+          experience_years: 3,
+          cost_category_id: 1,
+          effort_year: 2024,
+          effort_month: 1,
+          hours_allocated: 160
+        }
+      ];
+
+      setResourceSkills(mockResourceSkills);
+      setCostCategories(mockCostCategories);
+      setServiceCategories(mockServiceCategories);
+      setEffortData(mockEffortData);
 
     } catch (error) {
       console.error('Error loading resource efforts data:', error);
@@ -62,15 +96,13 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
 
   const handleAddEffort = async (effort: Omit<QuoteResourceEffort, 'id'>) => {
     try {
-      const { data, error } = await supabase
-        .from('QuoteResourceEffort')
-        .insert([effort])
-        .select()
-        .single();
+      // Mock add - in real implementation this would use Supabase
+      const newEffort: QuoteResourceEffort = {
+        ...effort,
+        id: Date.now() // Mock ID
+      };
 
-      if (error) throw error;
-
-      setEffortData(prev => [...prev, data]);
+      setEffortData(prev => [...prev, newEffort]);
       setShowAddDialog(false);
       
       toast({
@@ -89,16 +121,8 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
 
   const handleUpdateEffort = async (id: number, updates: Partial<QuoteResourceEffort>) => {
     try {
-      const { data, error } = await supabase
-        .from('QuoteResourceEffort')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setEffortData(prev => prev.map(item => item.id === id ? data : item));
+      // Mock update - in real implementation this would use Supabase
+      setEffortData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       
       toast({
         title: "Success",
@@ -116,13 +140,7 @@ const ResourceEfforts: React.FC<ResourceEffortsProps> = ({ dealId, quoteName, on
 
   const handleDeleteEffort = async (id: number) => {
     try {
-      const { error } = await supabase
-        .from('QuoteResourceEffort')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      // Mock delete - in real implementation this would use Supabase
       setEffortData(prev => prev.filter(item => item.id !== id));
       
       toast({

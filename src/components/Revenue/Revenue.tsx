@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { RevenueProps, QuoteRevenue, ResourceSkill, CostCategory } from './types';
-import { ServiceCategory, Geography } from '../DealMaster/types';
+import { RevenueProps, QuoteRevenue, ResourceSkill, CostCategory, BenchmarkRate } from './types';
+import { ServiceCategory } from '../DealMaster/types';
 import { RevenueTable } from './components/RevenueTable';
 import { AddRevenueDialog } from './components/AddRevenueDialog';
 
@@ -15,8 +14,7 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
   const [resourceSkills, setResourceSkills] = useState<ResourceSkill[]>([]);
   const [costCategories, setCostCategories] = useState<CostCategory[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>([]);
-  const [geographies, setGeographies] = useState<Geography[]>([]);
-  const [selectedGeographies, setSelectedGeographies] = useState<number[]>([]);
+  const [benchmarkRates, setBenchmarkRates] = useState<BenchmarkRate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
@@ -30,29 +28,76 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
     try {
       setLoading(true);
 
-      // Load master data
-      const [
-        resourceSkillsResult,
-        costCategoriesResult,
-        serviceCategoriesResult,
-        geographiesResult,
-        selectedGeographiesResult,
-        revenueResult
-      ] = await Promise.all([
-        supabase.from('ResourceSkill').select('*').order('name'),
-        supabase.from('CostCategory').select('*').order('name'),
-        supabase.from('ServiceCategory').select('*').order('level, name'),
-        supabase.from('Geography').select('*').order('country, city'),
-        supabase.from('QuoteGeography').select('geography_id').eq('Deal_Id', dealId).eq('Quote_Name', quoteName),
-        supabase.from('QuoteRevenue').select('*').eq('Deal_Id', dealId).eq('Quote_Name', quoteName)
-      ]);
+      // Mock data since tables don't exist yet
+      const mockResourceSkills: ResourceSkill[] = [
+        { id: 1, name: 'Programmer' },
+        { id: 2, name: 'Tester' },
+        { id: 3, name: 'Business Analyst' },
+        { id: 4, name: 'Project Manager' },
+        { id: 5, name: 'DevOps Engineer' },
+        { id: 6, name: 'UI/UX Designer' },
+        { id: 7, name: 'Data Analyst' },
+        { id: 8, name: 'Solution Architect' }
+      ];
 
-      setResourceSkills(resourceSkillsResult.data || []);
-      setCostCategories(costCategoriesResult.data || []);
-      setServiceCategories(serviceCategoriesResult.data || []);
-      setGeographies(geographiesResult.data || []);
-      setSelectedGeographies(selectedGeographiesResult.data?.map(g => g.geography_id) || []);
-      setRevenueData(revenueResult.data || []);
+      const mockCostCategories: CostCategory[] = [
+        { id: 1, name: 'Development' },
+        { id: 2, name: 'Testing' },
+        { id: 3, name: 'Analysis' },
+        { id: 4, name: 'Management' },
+        { id: 5, name: 'Infrastructure' }
+      ];
+
+      const mockServiceCategories: ServiceCategory[] = [
+        { id: 1, name: 'Technology Services', level: 1, parent_id: null },
+        { id: 2, name: 'Application Development', level: 2, parent_id: 1 },
+        { id: 3, name: 'Web Development', level: 3, parent_id: 2 },
+        { id: 4, name: 'Mobile Development', level: 3, parent_id: 2 },
+        { id: 5, name: 'Business Services', level: 1, parent_id: null },
+        { id: 6, name: 'Consulting', level: 2, parent_id: 5 },
+        { id: 7, name: 'Strategy Consulting', level: 3, parent_id: 6 }
+      ];
+
+      const mockBenchmarkRates: BenchmarkRate[] = [
+        {
+          id: 1,
+          service_category_level_1_id: 1,
+          service_category_level_2_id: 2,
+          service_category_level_3_id: 3,
+          resource_skill_id: 1,
+          experience_years: 3,
+          geography_id: 1,
+          benchmark_rate_usd_per_hour: 45.00,
+          cb_cost_usd_per_hour: 30.00,
+          margin_percent: 25.00
+        }
+      ];
+
+      const mockRevenueData: QuoteRevenue[] = [
+        {
+          id: 1,
+          Deal_Id: dealId,
+          Quote_Name: quoteName,
+          service_category_level_1_id: 1,
+          service_category_level_2_id: 2,
+          service_category_level_3_id: 3,
+          resource_skill_id: 1,
+          experience_years: 3,
+          cost_category_id: 1,
+          geography_id: 1,
+          benchmark_rate_usd_per_hour: 45.00,
+          cb_cost_usd_per_hour: 30.00,
+          margin_percent: 25.00,
+          is_benchmark_rate_overridden: false,
+          is_cb_cost_overridden: false
+        }
+      ];
+
+      setResourceSkills(mockResourceSkills);
+      setCostCategories(mockCostCategories);
+      setServiceCategories(mockServiceCategories);
+      setBenchmarkRates(mockBenchmarkRates);
+      setRevenueData(mockRevenueData);
 
     } catch (error) {
       console.error('Error loading revenue data:', error);
@@ -68,26 +113,24 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleAddRevenue = async (revenue: Omit<QuoteRevenue, 'id'>) => {
     try {
-      const { data, error } = await supabase
-        .from('QuoteRevenue')
-        .insert([revenue])
-        .select()
-        .single();
+      // Mock add - in real implementation this would use Supabase
+      const newRevenue: QuoteRevenue = {
+        ...revenue,
+        id: Date.now() // Mock ID
+      };
 
-      if (error) throw error;
-
-      setRevenueData(prev => [...prev, data]);
+      setRevenueData(prev => [...prev, newRevenue]);
       setShowAddDialog(false);
       
       toast({
         title: "Success",
-        description: "Revenue item added successfully"
+        description: "Revenue entry added successfully"
       });
     } catch (error) {
       console.error('Error adding revenue:', error);
       toast({
         title: "Error",
-        description: "Failed to add revenue item",
+        description: "Failed to add revenue entry",
         variant: "destructive"
       });
     }
@@ -95,26 +138,18 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleUpdateRevenue = async (id: number, updates: Partial<QuoteRevenue>) => {
     try {
-      const { data, error } = await supabase
-        .from('QuoteRevenue')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setRevenueData(prev => prev.map(item => item.id === id ? data : item));
+      // Mock update - in real implementation this would use Supabase
+      setRevenueData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       
       toast({
         title: "Success",
-        description: "Revenue item updated successfully"
+        description: "Revenue entry updated successfully"
       });
     } catch (error) {
       console.error('Error updating revenue:', error);
       toast({
         title: "Error",
-        description: "Failed to update revenue item",
+        description: "Failed to update revenue entry",
         variant: "destructive"
       });
     }
@@ -122,24 +157,18 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleDeleteRevenue = async (id: number) => {
     try {
-      const { error } = await supabase
-        .from('QuoteRevenue')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      // Mock delete - in real implementation this would use Supabase
       setRevenueData(prev => prev.filter(item => item.id !== id));
       
       toast({
         title: "Success",
-        description: "Revenue item deleted successfully"
+        description: "Revenue entry deleted successfully"
       });
     } catch (error) {
       console.error('Error deleting revenue:', error);
       toast({
         title: "Error",
-        description: "Failed to delete revenue item",
+        description: "Failed to delete revenue entry",
         variant: "destructive"
       });
     }
@@ -165,7 +194,7 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
             </div>
             <Button onClick={() => setShowAddDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Revenue Item
+              Add Revenue Entry
             </Button>
           </div>
         </div>
@@ -180,8 +209,7 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
               resourceSkills={resourceSkills}
               costCategories={costCategories}
               serviceCategories={serviceCategories}
-              geographies={geographies}
-              selectedGeographies={selectedGeographies}
+              benchmarkRates={benchmarkRates}
               onUpdate={handleUpdateRevenue}
               onDelete={handleDeleteRevenue}
             />
@@ -197,8 +225,7 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
           resourceSkills={resourceSkills}
           costCategories={costCategories}
           serviceCategories={serviceCategories}
-          geographies={geographies}
-          selectedGeographies={selectedGeographies}
+          benchmarkRates={benchmarkRates}
         />
       </div>
     </div>
