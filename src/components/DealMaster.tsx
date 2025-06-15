@@ -101,9 +101,16 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   }, [masterDataLoaded, dealId, quoteName]);
 
   const handleSaveData = () => {
-    console.log('=== SAVE DATA DEBUG ===');
+    console.log('=== DEAL MASTER - SAVE DATA DEBUG ===');
+    console.log('Deal ID:', dealId);
+    console.log('Quote Name:', quoteName);
     console.log('Raw geography table data:', geographyTableData);
+    console.log('Raw geography table data type:', typeof geographyTableData);
+    console.log('Raw geography table data length:', geographyTableData?.length);
     console.log('Raw category table data:', categoryTableData);
+    console.log('Quote data:', quoteData);
+    console.log('Selected resource types:', selectedResourceTypes);
+    console.log('Volume discounts:', volumeDiscounts);
 
     saveData(
       dealId,

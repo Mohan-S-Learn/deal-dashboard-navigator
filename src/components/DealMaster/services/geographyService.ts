@@ -6,44 +6,63 @@ export const saveGeographyData = async (
   quoteName: string,
   geographyTableData: any[]
 ) => {
-  console.log('=== PROCESSING GEOGRAPHY DATA ===');
+  console.log('=== GEOGRAPHY SERVICE - PROCESSING DATA ===');
+  console.log('Deal ID:', dealId);
+  console.log('Quote Name:', quoteName);
   console.log('Geography data type:', typeof geographyTableData);
   console.log('Geography data content:', geographyTableData);
+  console.log('Geography data length:', geographyTableData?.length);
   
   // Delete existing geography records
-  await supabase
+  console.log('Deleting existing geography records...');
+  const { error: deleteError } = await supabase
     .from('QuoteGeography')
     .delete()
     .eq('Deal_Id', dealId)
     .eq('Quote_Name', quoteName);
   
-  console.log('Deleted existing geography records');
+  if (deleteError) {
+    console.error('Error deleting existing geography records:', deleteError);
+    throw deleteError;
+  }
+  
+  console.log('Successfully deleted existing geography records');
 
-  // Process geography data as array of geography IDs
+  // Process geography data - expect array of geography IDs
   if (Array.isArray(geographyTableData) && geographyTableData.length > 0) {
-    // Filter out null/invalid geography IDs
-    const validGeographyIds = geographyTableData.filter(id => 
-      id !== null && id !== undefined && !isNaN(Number(id)) && Number(id) > 0
-    ).map(id => Number(id));
+    console.log('Processing geography data array...');
+    
+    // Filter out null/invalid geography IDs and convert to numbers
+    const validGeographyIds = geographyTableData
+      .filter(id => {
+        const isValid = id !== null && id !== undefined && !isNaN(Number(id)) && Number(id) > 0;
+        console.log(`Geography ID ${id} is valid: ${isValid}`);
+        return isValid;
+      })
+      .map(id => Number(id));
 
     console.log('Valid geography IDs for saving:', validGeographyIds);
 
     if (validGeographyIds.length > 0) {
-      const geographyInserts = validGeographyIds.map(geoId => ({
-        Deal_Id: dealId,
-        Quote_Name: quoteName,
-        geography_id: geoId
-      }));
+      const geographyInserts = validGeographyIds.map(geoId => {
+        const insert = {
+          Deal_Id: dealId,
+          Quote_Name: quoteName,
+          geography_id: geoId
+        };
+        console.log('Creating insert record:', insert);
+        return insert;
+      });
 
       console.log('Inserting geography records:', geographyInserts);
       
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('QuoteGeography')
         .insert(geographyInserts);
       
-      if (error) {
-        console.error('Geography insert error:', error);
-        throw error;
+      if (insertError) {
+        console.error('Geography insert error:', insertError);
+        throw insertError;
       }
       
       console.log('Geography records saved successfully');
@@ -52,5 +71,8 @@ export const saveGeographyData = async (
     }
   } else {
     console.log('No geography data or invalid format to process');
+    console.log('Expected: array of geography IDs, received:', geographyTableData);
   }
+
+  console.log('=== GEOGRAPHY SERVICE - COMPLETED ===');
 };

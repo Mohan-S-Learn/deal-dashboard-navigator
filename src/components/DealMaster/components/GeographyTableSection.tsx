@@ -19,6 +19,8 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   geographies,
   onDataChange
 }) => {
+  console.log('GeographyTableSection - Props received:', { geographies: geographies.length, onDataChange: typeof onDataChange });
+  
   const {
     selectedRows,
     updateRow,
@@ -28,6 +30,8 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
     getDuplicates,
     isDuplicate
   } = useGeographyTableData(geographies, onDataChange);
+
+  console.log('GeographyTableSection - Current selectedRows:', selectedRows);
 
   const duplicates = getDuplicates();
 
