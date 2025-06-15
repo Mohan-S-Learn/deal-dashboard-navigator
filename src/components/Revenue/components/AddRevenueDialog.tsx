@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -62,6 +61,14 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
     return geographies.filter(geo => selectedGeographies.includes(geo.id));
   };
 
+  // Filter cost categories based on service category level 3
+  const getFilteredCostCategories = () => {
+    return costCategories.filter(cc => 
+      !cc.service_category_level_3_id || 
+      cc.service_category_level_3_id === formData.service_category_level_3_id
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -99,6 +106,16 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
     });
   };
 
+  const handleLevel3Change = (value: string) => {
+    const id = parseInt(value);
+    setFormData(prev => ({
+      ...prev,
+      service_category_level_3_id: id,
+      service_category_level_4_id: null,
+      cost_category_id: null // Reset cost category when level 3 changes
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -119,7 +136,8 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
                     service_category_level_1_id: id,
                     service_category_level_2_id: null,
                     service_category_level_3_id: null,
-                    service_category_level_4_id: null
+                    service_category_level_4_id: null,
+                    cost_category_id: null
                   }));
                 }}
               >
@@ -144,7 +162,8 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
                     ...prev,
                     service_category_level_2_id: id,
                     service_category_level_3_id: null,
-                    service_category_level_4_id: null
+                    service_category_level_4_id: null,
+                    cost_category_id: null
                   }));
                 }}
                 disabled={!formData.service_category_level_1_id}
@@ -164,14 +183,7 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
               <Label>Service Category Level 3</Label>
               <Select 
                 value={formData.service_category_level_3_id?.toString() || ''} 
-                onValueChange={(value) => {
-                  const id = parseInt(value);
-                  setFormData(prev => ({
-                    ...prev,
-                    service_category_level_3_id: id,
-                    service_category_level_4_id: null
-                  }));
-                }}
+                onValueChange={handleLevel3Change}
                 disabled={!formData.service_category_level_2_id}
               >
                 <SelectTrigger>
@@ -222,12 +234,13 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
                 onValueChange={(value) => {
                   setFormData(prev => ({ ...prev, cost_category_id: parseInt(value) }));
                 }}
+                disabled={!formData.service_category_level_3_id}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Cost Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {costCategories.map(cat => (
+                  {getFilteredCostCategories().map(cat => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>

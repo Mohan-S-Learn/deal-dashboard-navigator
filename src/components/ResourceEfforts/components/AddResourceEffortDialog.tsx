@@ -43,9 +43,24 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
   });
 
   const level1Categories = serviceCategories.filter(sc => sc.level === 1);
-  const level2Categories = serviceCategories.filter(sc => sc.level === 2 && sc.parent_id === parseInt(formData.service_category_level_1_id));
-  const level3Categories = serviceCategories.filter(sc => sc.level === 3 && sc.parent_id === parseInt(formData.service_category_level_2_id));
-  const level4Categories = serviceCategories.filter(sc => sc.level === 4 && sc.parent_id === parseInt(formData.service_category_level_3_id));
+  const level2Categories = serviceCategories.filter(sc => 
+    sc.level === 2 && 
+    sc.parent_id === parseInt(formData.service_category_level_1_id)
+  );
+  const level3Categories = serviceCategories.filter(sc => 
+    sc.level === 3 && 
+    sc.parent_id === parseInt(formData.service_category_level_2_id)
+  );
+  const level4Categories = serviceCategories.filter(sc => 
+    sc.level === 4 && 
+    sc.parent_id === parseInt(formData.service_category_level_3_id)
+  );
+
+  // Filter cost categories based on service category level 3
+  const filteredCostCategories = costCategories.filter(cc => 
+    !cc.service_category_level_3_id || 
+    cc.service_category_level_3_id === parseInt(formData.service_category_level_3_id)
+  );
 
   const months = [
     { value: 1, label: 'January' },
@@ -115,6 +130,15 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
     });
   };
 
+  const handleLevel3Change = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      service_category_level_3_id: value, 
+      service_category_level_4_id: '',
+      cost_category_id: '' // Reset cost category when level 3 changes
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -126,7 +150,7 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="level1">Service Category Level 1</Label>
-              <Select value={formData.service_category_level_1_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_1_id: value, service_category_level_2_id: '', service_category_level_3_id: '', service_category_level_4_id: '' }))}>
+              <Select value={formData.service_category_level_1_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_1_id: value, service_category_level_2_id: '', service_category_level_3_id: '', service_category_level_4_id: '', cost_category_id: '' }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Level 1" />
                 </SelectTrigger>
@@ -142,7 +166,7 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
 
             <div>
               <Label htmlFor="level2">Service Category Level 2</Label>
-              <Select value={formData.service_category_level_2_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_2_id: value, service_category_level_3_id: '', service_category_level_4_id: '' }))}>
+              <Select value={formData.service_category_level_2_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_2_id: value, service_category_level_3_id: '', service_category_level_4_id: '', cost_category_id: '' }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Level 2" />
                 </SelectTrigger>
@@ -158,7 +182,7 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
 
             <div>
               <Label htmlFor="level3">Service Category Level 3</Label>
-              <Select value={formData.service_category_level_3_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_3_id: value, service_category_level_4_id: '' }))}>
+              <Select value={formData.service_category_level_3_id} onValueChange={handleLevel3Change}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Level 3" />
                 </SelectTrigger>
@@ -174,7 +198,11 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
 
             <div>
               <Label htmlFor="level4">Resource Skill (Level 4)</Label>
-              <Select value={formData.service_category_level_4_id} onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_4_id: value }))}>
+              <Select 
+                value={formData.service_category_level_4_id} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, service_category_level_4_id: value }))}
+                disabled={!formData.service_category_level_3_id}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Resource Skill" />
                 </SelectTrigger>
@@ -201,12 +229,16 @@ export const AddResourceEffortDialog: React.FC<AddResourceEffortDialogProps> = (
 
             <div>
               <Label htmlFor="cost_category">Cost Category</Label>
-              <Select value={formData.cost_category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, cost_category_id: value }))}>
+              <Select 
+                value={formData.cost_category_id} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, cost_category_id: value }))}
+                disabled={!formData.service_category_level_3_id}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Cost Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {costCategories.map((category) => (
+                  {filteredCostCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id.toString()}>
                       {category.name}
                     </SelectItem>
