@@ -12,6 +12,7 @@ export const useDealMasterState = (
   loadedSelectedCategories?: SelectedCategories | null,
   loadedVolumeDiscounts?: VolumeDiscountRange[]
 ) => {
+  // Initialize with empty state
   const [quoteData, setQuoteData] = useState<QuoteData>({
     knowledge_transition_start_date: null,
     knowledge_transition_end_date: null,
@@ -40,42 +41,46 @@ export const useDealMasterState = (
   const [geographyTableData, setGeographyTableData] = useState<any[]>([]);
   const [categoryTableData, setCategoryTableData] = useState<any[]>([]);
 
-  // Initialize state with loaded data immediately when it becomes available
+  // Only update state when loadedQuoteData changes and is not null
   useEffect(() => {
-    console.log('useDealMasterState - Effect triggered with loadedQuoteData:', loadedQuoteData);
-    if (loadedQuoteData) {
+    console.log('useDealMasterState - Quote data effect triggered:', { loadedQuoteData });
+    if (loadedQuoteData !== null && loadedQuoteData !== undefined) {
       console.log('useDealMasterState - Setting quote data to:', loadedQuoteData);
       setQuoteData(loadedQuoteData);
     }
   }, [loadedQuoteData]);
 
+  // Only update state when loadedSelectedResourceTypes changes and is not empty
   useEffect(() => {
-    console.log('useDealMasterState - Effect triggered with loadedSelectedResourceTypes:', loadedSelectedResourceTypes);
-    if (loadedSelectedResourceTypes) {
+    console.log('useDealMasterState - Resource types effect triggered:', { loadedSelectedResourceTypes });
+    if (loadedSelectedResourceTypes && loadedSelectedResourceTypes.length > 0) {
       console.log('useDealMasterState - Setting resource types to:', loadedSelectedResourceTypes);
       setSelectedResourceTypes(loadedSelectedResourceTypes);
     }
   }, [loadedSelectedResourceTypes]);
 
+  // Only update state when loadedSelectedGeographies changes and is not empty
   useEffect(() => {
-    console.log('useDealMasterState - Effect triggered with loadedSelectedGeographies:', loadedSelectedGeographies);
-    if (loadedSelectedGeographies) {
+    console.log('useDealMasterState - Geographies effect triggered:', { loadedSelectedGeographies });
+    if (loadedSelectedGeographies && loadedSelectedGeographies.length > 0) {
       console.log('useDealMasterState - Setting geographies to:', loadedSelectedGeographies);
       setSelectedGeographies(loadedSelectedGeographies);
     }
   }, [loadedSelectedGeographies]);
 
+  // Only update state when loadedSelectedCategories changes and is not null
   useEffect(() => {
-    console.log('useDealMasterState - Effect triggered with loadedSelectedCategories:', loadedSelectedCategories);
-    if (loadedSelectedCategories) {
+    console.log('useDealMasterState - Categories effect triggered:', { loadedSelectedCategories });
+    if (loadedSelectedCategories !== null && loadedSelectedCategories !== undefined) {
       console.log('useDealMasterState - Setting categories to:', loadedSelectedCategories);
       setSelectedCategories(loadedSelectedCategories);
     }
   }, [loadedSelectedCategories]);
 
+  // Only update state when loadedVolumeDiscounts changes and is not empty
   useEffect(() => {
-    console.log('useDealMasterState - Effect triggered with loadedVolumeDiscounts:', loadedVolumeDiscounts);
-    if (loadedVolumeDiscounts) {
+    console.log('useDealMasterState - Volume discounts effect triggered:', { loadedVolumeDiscounts });
+    if (loadedVolumeDiscounts && loadedVolumeDiscounts.length > 0) {
       console.log('useDealMasterState - Setting volume discounts to:', loadedVolumeDiscounts);
       setVolumeDiscounts(loadedVolumeDiscounts);
     }
@@ -93,10 +98,17 @@ export const useDealMasterState = (
     }
   }, [quoteData.knowledge_transition_start_date, quoteData.steady_state_end_date, quoteData.overall_duration_months]);
 
-  // Debug log current state
+  // Debug current state
   useEffect(() => {
-    console.log('useDealMasterState - Current quoteData state:', quoteData);
-  }, [quoteData]);
+    console.log('useDealMasterState - Current state summary:', {
+      hasQuoteData: !!quoteData.market_id,
+      marketId: quoteData.market_id,
+      resourceTypesCount: selectedResourceTypes.length,
+      geographiesCount: selectedGeographies.length,
+      hasCategories: !!(selectedCategories.level1 || selectedCategories.level2 || selectedCategories.level3),
+      volumeDiscountsCount: volumeDiscounts.length
+    });
+  }, [quoteData, selectedResourceTypes, selectedGeographies, selectedCategories, volumeDiscounts]);
 
   return {
     quoteData,

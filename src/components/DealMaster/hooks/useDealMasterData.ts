@@ -52,6 +52,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
       console.log('useDealMasterData - Loaded service categories:', categoriesData?.length);
       
       setMasterDataLoaded(true);
+      console.log('useDealMasterData - Master data loading complete');
     } catch (error) {
       console.error('Error loading master data:', error);
       toast({
@@ -67,16 +68,19 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
       console.log('useDealMasterData - Loading quote data for:', { dealId, quoteName });
       
       // Load quote data
-      const { data: quote } = await supabase
+      const { data: quote, error: quoteError } = await supabase
         .from('Quotes')
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
         .maybeSingle();
 
-      console.log('useDealMasterData - Raw quote from DB:', quote);
+      console.log('useDealMasterData - Quote query result:', { quote, quoteError });
 
-      if (quote) {
+      if (quoteError) {
+        console.error('Error loading quote:', quoteError);
+        setQuoteData(null);
+      } else if (quote) {
         const loadedQuoteData: QuoteData = {
           knowledge_transition_start_date: quote.knowledge_transition_start_date ? new Date(quote.knowledge_transition_start_date) : null,
           knowledge_transition_end_date: quote.knowledge_transition_end_date ? new Date(quote.knowledge_transition_end_date) : null,
@@ -94,7 +98,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
           licenses_percent: quote.licenses_percent,
         };
         
-        console.log('useDealMasterData - Parsed quote data:', loadedQuoteData);
+        console.log('useDealMasterData - Parsed quote data successfully:', loadedQuoteData);
         setQuoteData(loadedQuoteData);
       } else {
         console.log('useDealMasterData - No quote found, setting to null');
@@ -102,36 +106,49 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
       }
 
       // Load selected resource types
-      const { data: resourceTypeData } = await supabase
+      const { data: resourceTypeData, error: rtError } = await supabase
         .from('QuoteResourceType')
         .select('resource_type_id')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName);
       
-      const loadedResourceTypes = resourceTypeData?.map(rt => rt.resource_type_id) || [];
-      console.log('useDealMasterData - Loaded resource types:', loadedResourceTypes);
-      setSelectedResourceTypes(loadedResourceTypes);
+      if (rtError) {
+        console.error('Error loading resource types:', rtError);
+        setSelectedResourceTypes([]);
+      } else {
+        const loadedResourceTypes = resourceTypeData?.map(rt => rt.resource_type_id) || [];
+        console.log('useDealMasterData - Loaded resource types:', loadedResourceTypes);
+        setSelectedResourceTypes(loadedResourceTypes);
+      }
 
       // Load selected geographies
-      const { data: geographyData } = await supabase
+      const { data: geographyData, error: geoError } = await supabase
         .from('QuoteGeography')
         .select('geography_id')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName);
       
-      const loadedGeographies = geographyData?.map(g => g.geography_id) || [];
-      console.log('useDealMasterData - Loaded geographies:', loadedGeographies);
-      setSelectedGeographies(loadedGeographies);
+      if (geoError) {
+        console.error('Error loading geographies:', geoError);
+        setSelectedGeographies([]);
+      } else {
+        const loadedGeographies = geographyData?.map(g => g.geography_id) || [];
+        console.log('useDealMasterData - Loaded geographies:', loadedGeographies);
+        setSelectedGeographies(loadedGeographies);
+      }
 
       // Load service categories
-      const { data: categoryData } = await supabase
+      const { data: categoryData, error: catError } = await supabase
         .from('QuoteServiceCategory')
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
         .maybeSingle();
       
-      if (categoryData) {
+      if (catError) {
+        console.error('Error loading categories:', catError);
+        setSelectedCategories(null);
+      } else if (categoryData) {
         const loadedCategories: SelectedCategories = {
           level1: categoryData.category_level_1_id,
           level2: categoryData.category_level_2_id,
@@ -145,16 +162,23 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
       }
 
       // Load volume discounts
-      const { data: volumeData } = await supabase
+      const { data: volumeData, error: volError } = await supabase
         .from('VolumeDiscount')
         .select('*')
         .eq('Deal_Id', dealId)
         .eq('Quote_Name', quoteName)
         .order('range_start');
       
-      const loadedVolumeDiscounts = volumeData || [];
-      console.log('useDealMasterData - Loaded volume discounts:', loadedVolumeDiscounts);
-      setVolumeDiscounts(loadedVolumeDiscounts);
+      if (volError) {
+        console.error('Error loading volume discounts:', volError);
+        setVolumeDiscounts([]);
+      } else {
+        const loadedVolumeDiscounts = volumeData || [];
+        console.log('useDealMasterData - Loaded volume discounts:', loadedVolumeDiscounts);
+        setVolumeDiscounts(loadedVolumeDiscounts);
+      }
+
+      console.log('useDealMasterData - Quote data loading complete');
 
     } catch (error) {
       console.error('Error loading quote data:', error);
