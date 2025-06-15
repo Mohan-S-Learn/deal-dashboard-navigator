@@ -62,6 +62,28 @@ export const DealMasterContent: React.FC<DealMasterContentProps> = ({
   onGeographyDataChange,
   onCategoryDataChange,
 }) => {
+  console.log('DealMasterContent - Props received:', {
+    quoteData,
+    markets: markets?.length,
+    resourceTypes: resourceTypes?.length,
+    selectedResourceTypes,
+    marketsArray: markets,
+    resourceTypesArray: resourceTypes
+  });
+
+  // Ensure arrays are properly initialized
+  const safeMarkets = Array.isArray(markets) ? markets : [];
+  const safeResourceTypes = Array.isArray(resourceTypes) ? resourceTypes : [];
+  const safeGeographies = Array.isArray(geographies) ? geographies : [];
+  const safeServiceCategories = Array.isArray(serviceCategories) ? serviceCategories : [];
+
+  console.log('DealMasterContent - Safe arrays:', {
+    safeMarkets: safeMarkets.length,
+    safeResourceTypes: safeResourceTypes.length,
+    safeGeographies: safeGeographies.length,
+    safeServiceCategories: safeServiceCategories.length
+  });
+
   return (
     <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8 space-y-8">
       <TimelineSection
@@ -72,8 +94,8 @@ export const DealMasterContent: React.FC<DealMasterContentProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <MarketResourcesSection
           quoteData={quoteData}
-          markets={markets}
-          resourceTypes={resourceTypes}
+          markets={safeMarkets}
+          resourceTypes={safeResourceTypes}
           selectedResourceTypes={selectedResourceTypes}
           onMarketChange={onMarketChange}
           onResourceTypeChange={onResourceTypeChange}
@@ -98,14 +120,14 @@ export const DealMasterContent: React.FC<DealMasterContentProps> = ({
       />
 
       <GeographyTableSection
-        geographies={geographies}
+        geographies={safeGeographies}
         selectedGeographies={selectedGeographies}
         onGeographyChange={onGeographyChange}
         onDataChange={onGeographyDataChange}
       />
 
       <ServiceCategoriesTableSection
-        serviceCategories={serviceCategories}
+        serviceCategories={safeServiceCategories}
         selectedCategories={selectedCategories}
         onCategoryChange={onCategoryChange}
         onDataChange={onCategoryDataChange}
