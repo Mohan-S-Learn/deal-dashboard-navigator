@@ -23,25 +23,19 @@ export const MarketResourcesSection: React.FC<MarketResourcesSectionProps> = ({
   onMarketChange,
   onResourceTypeChange
 }) => {
-  console.log('MarketResourcesSection - Props received:', {
-    quoteData,
-    markets: markets?.length,
-    resourceTypes: resourceTypes?.length,
-    selectedResourceTypes,
-    marketsData: markets,
-    resourceTypesData: resourceTypes,
-    currentMarketId: quoteData?.market_id
-  });
+  console.log('=== MarketResourcesSection Debug ===');
+  console.log('quoteData.market_id:', quoteData?.market_id);
+  console.log('markets array:', markets);
+  console.log('resourceTypes array:', resourceTypes);
+  console.log('selectedResourceTypes:', selectedResourceTypes);
 
   // Ensure we have valid arrays
   const safeMarkets = Array.isArray(markets) ? markets : [];
   const safeResourceTypes = Array.isArray(resourceTypes) ? resourceTypes : [];
 
-  console.log('MarketResourcesSection - Safe data:', {
-    safeMarkets,
-    safeResourceTypes,
-    marketValue: quoteData?.market_id?.toString() || ''
-  });
+  // Get the selected market
+  const selectedMarket = safeMarkets.find(m => m.id === quoteData?.market_id);
+  console.log('selectedMarket found:', selectedMarket);
 
   return (
     <Card>
@@ -52,18 +46,20 @@ export const MarketResourcesSection: React.FC<MarketResourcesSectionProps> = ({
         <div className="space-y-2">
           <Label>Market</Label>
           <Select 
-            value={quoteData?.market_id?.toString() || ''} 
+            value={quoteData?.market_id ? quoteData.market_id.toString() : undefined} 
             onValueChange={(value) => {
               console.log('Market selection changed to:', value);
               onMarketChange(parseInt(value));
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select market" />
+              <SelectValue placeholder="Select market">
+                {selectedMarket ? selectedMarket.name : "Select market"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {safeMarkets.map(market => {
-                console.log('Rendering market option:', market);
+                console.log('Rendering market option:', market.id, market.name);
                 return (
                   <SelectItem key={market.id} value={market.id.toString()}>
                     {market.name}
@@ -81,9 +77,8 @@ export const MarketResourcesSection: React.FC<MarketResourcesSectionProps> = ({
           <Label>Resource Categories</Label>
           <div className="space-y-2">
             {safeResourceTypes.map(rt => {
-              console.log('Rendering resource type:', rt);
               const isChecked = selectedResourceTypes.includes(rt.id);
-              console.log(`Resource type ${rt.id} checked:`, isChecked);
+              console.log(`Resource type ${rt.id} (${rt.name}) checked:`, isChecked);
               return (
                 <div key={rt.id} className="flex items-center space-x-2">
                   <Checkbox 
@@ -94,7 +89,9 @@ export const MarketResourcesSection: React.FC<MarketResourcesSectionProps> = ({
                       onResourceTypeChange(rt.id, checked as boolean);
                     }}
                   />
-                  <Label htmlFor={`resource-${rt.id}`}>{rt.name}</Label>
+                  <Label htmlFor={`resource-${rt.id}`} className="text-sm font-medium">
+                    {rt.name}
+                  </Label>
                 </div>
               );
             })}
