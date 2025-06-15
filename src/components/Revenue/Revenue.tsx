@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { RevenueProps, QuoteRevenue, ResourceSkill, CostCategory, BenchmarkRate } from './types';
 import { ServiceCategory } from '../DealMaster/types';
 import { RevenueTable } from './components/RevenueTable';
@@ -28,76 +29,51 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
     try {
       setLoading(true);
 
-      // Mock data since tables don't exist yet
-      const mockResourceSkills: ResourceSkill[] = [
-        { id: 1, name: 'Programmer' },
-        { id: 2, name: 'Tester' },
-        { id: 3, name: 'Business Analyst' },
-        { id: 4, name: 'Project Manager' },
-        { id: 5, name: 'DevOps Engineer' },
-        { id: 6, name: 'UI/UX Designer' },
-        { id: 7, name: 'Data Analyst' },
-        { id: 8, name: 'Solution Architect' }
-      ];
+      // Load ResourceSkills
+      const { data: resourceSkillsData, error: resourceSkillsError } = await supabase
+        .from('ResourceSkill')
+        .select('*')
+        .order('name');
 
-      const mockCostCategories: CostCategory[] = [
-        { id: 1, name: 'Development' },
-        { id: 2, name: 'Testing' },
-        { id: 3, name: 'Analysis' },
-        { id: 4, name: 'Management' },
-        { id: 5, name: 'Infrastructure' }
-      ];
+      if (resourceSkillsError) throw resourceSkillsError;
 
-      const mockServiceCategories: ServiceCategory[] = [
-        { id: 1, name: 'Technology Services', level: 1, parent_id: null },
-        { id: 2, name: 'Application Development', level: 2, parent_id: 1 },
-        { id: 3, name: 'Web Development', level: 3, parent_id: 2 },
-        { id: 4, name: 'Mobile Development', level: 3, parent_id: 2 },
-        { id: 5, name: 'Business Services', level: 1, parent_id: null },
-        { id: 6, name: 'Consulting', level: 2, parent_id: 5 },
-        { id: 7, name: 'Strategy Consulting', level: 3, parent_id: 6 }
-      ];
+      // Load CostCategories
+      const { data: costCategoriesData, error: costCategoriesError } = await supabase
+        .from('CostCategory')
+        .select('*')
+        .order('name');
 
-      const mockBenchmarkRates: BenchmarkRate[] = [
-        {
-          id: 1,
-          service_category_level_1_id: 1,
-          service_category_level_2_id: 2,
-          service_category_level_3_id: 3,
-          resource_skill_id: 1,
-          experience_years: 3,
-          geography_id: 1,
-          benchmark_rate_usd_per_hour: 45.00,
-          cb_cost_usd_per_hour: 30.00,
-          margin_percent: 25.00
-        }
-      ];
+      if (costCategoriesError) throw costCategoriesError;
 
-      const mockRevenueData: QuoteRevenue[] = [
-        {
-          id: 1,
-          Deal_Id: dealId,
-          Quote_Name: quoteName,
-          service_category_level_1_id: 1,
-          service_category_level_2_id: 2,
-          service_category_level_3_id: 3,
-          resource_skill_id: 1,
-          experience_years: 3,
-          cost_category_id: 1,
-          geography_id: 1,
-          benchmark_rate_usd_per_hour: 45.00,
-          cb_cost_usd_per_hour: 30.00,
-          margin_percent: 25.00,
-          is_benchmark_rate_overridden: false,
-          is_cb_cost_overridden: false
-        }
-      ];
+      // Load ServiceCategories
+      const { data: serviceCategoriesData, error: serviceCategoriesError } = await supabase
+        .from('ServiceCategory')
+        .select('*')
+        .order('level', { ascending: true });
 
-      setResourceSkills(mockResourceSkills);
-      setCostCategories(mockCostCategories);
-      setServiceCategories(mockServiceCategories);
-      setBenchmarkRates(mockBenchmarkRates);
-      setRevenueData(mockRevenueData);
+      if (serviceCategoriesError) throw serviceCategoriesError;
+
+      // Load BenchmarkRates
+      const { data: benchmarkRatesData, error: benchmarkRatesError } = await supabase
+        .from('BenchmarkRate')
+        .select('*');
+
+      if (benchmarkRatesError) throw benchmarkRatesError;
+
+      // Load Revenue data for this quote
+      const { data: revenueDataResult, error: revenueError } = await supabase
+        .from('QuoteRevenue')
+        .select('*')
+        .eq('Deal_Id', dealId)
+        .eq('Quote_Name', quoteName);
+
+      if (revenueError) throw revenueError;
+
+      setResourceSkills(resourceSkillsData || []);
+      setCostCategories(costCategoriesData || []);
+      setServiceCategories(serviceCategoriesData || []);
+      setBenchmarkRates(benchmarkRatesData || []);
+      setRevenueData(revenueDataResult || []);
 
     } catch (error) {
       console.error('Error loading revenue data:', error);
@@ -113,13 +89,15 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleAddRevenue = async (revenue: Omit<QuoteRevenue, 'id'>) => {
     try {
-      // Mock add - in real implementation this would use Supabase
-      const newRevenue: QuoteRevenue = {
-        ...revenue,
-        id: Date.now() // Mock ID
-      };
+      const { data, error } = await supabase
+        .from('QuoteRevenue')
+        .insert([revenue])
+        .select()
+        .single();
 
-      setRevenueData(prev => [...prev, newRevenue]);
+      if (error) throw error;
+
+      setRevenueData(prev => [...prev, data]);
       setShowAddDialog(false);
       
       toast({
@@ -138,7 +116,13 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleUpdateRevenue = async (id: number, updates: Partial<QuoteRevenue>) => {
     try {
-      // Mock update - in real implementation this would use Supabase
+      const { error } = await supabase
+        .from('QuoteRevenue')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+
       setRevenueData(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       
       toast({
@@ -157,7 +141,13 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
 
   const handleDeleteRevenue = async (id: number) => {
     try {
-      // Mock delete - in real implementation this would use Supabase
+      const { error } = await supabase
+        .from('QuoteRevenue')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       setRevenueData(prev => prev.filter(item => item.id !== id));
       
       toast({
@@ -209,7 +199,6 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
               resourceSkills={resourceSkills}
               costCategories={costCategories}
               serviceCategories={serviceCategories}
-              benchmarkRates={benchmarkRates}
               onUpdate={handleUpdateRevenue}
               onDelete={handleDeleteRevenue}
             />
@@ -225,7 +214,6 @@ const Revenue: React.FC<RevenueProps> = ({ dealId, quoteName, onBack }) => {
           resourceSkills={resourceSkills}
           costCategories={costCategories}
           serviceCategories={serviceCategories}
-          benchmarkRates={benchmarkRates}
         />
       </div>
     </div>

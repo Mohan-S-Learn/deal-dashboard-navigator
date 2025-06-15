@@ -9,6 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      BenchmarkRate: {
+        Row: {
+          benchmark_rate_usd_per_hour: number | null
+          cb_cost_usd_per_hour: number | null
+          created_at: string | null
+          experience_years: number
+          geography_id: number | null
+          id: number
+          margin_percent: number | null
+          resource_skill_id: number
+          service_category_level_1_id: number | null
+          service_category_level_2_id: number | null
+          service_category_level_3_id: number | null
+        }
+        Insert: {
+          benchmark_rate_usd_per_hour?: number | null
+          cb_cost_usd_per_hour?: number | null
+          created_at?: string | null
+          experience_years: number
+          geography_id?: number | null
+          id?: number
+          margin_percent?: number | null
+          resource_skill_id: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Update: {
+          benchmark_rate_usd_per_hour?: number | null
+          cb_cost_usd_per_hour?: number | null
+          created_at?: string | null
+          experience_years?: number
+          geography_id?: number | null
+          id?: number
+          margin_percent?: number | null
+          resource_skill_id?: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "BenchmarkRate_geography_id_fkey"
+            columns: ["geography_id"]
+            isOneToOne: false
+            referencedRelation: "Geography"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "BenchmarkRate_resource_skill_id_fkey"
+            columns: ["resource_skill_id"]
+            isOneToOne: false
+            referencedRelation: "ResourceSkill"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "BenchmarkRate_service_category_level_1_id_fkey"
+            columns: ["service_category_level_1_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "BenchmarkRate_service_category_level_2_id_fkey"
+            columns: ["service_category_level_2_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "BenchmarkRate_service_category_level_3_id_fkey"
+            columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      CostCategory: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+          service_category_level_3_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+          service_category_level_3_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          service_category_level_3_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "CostCategory_service_category_level_3_id_fkey"
+            columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Deals: {
         Row: {
           Created_Date: string
@@ -120,6 +227,97 @@ export type Database = {
           },
         ]
       }
+      QuoteResourceEffort: {
+        Row: {
+          cost_category_id: number | null
+          created_at: string | null
+          Deal_Id: string
+          effort_month: number
+          effort_year: number
+          experience_years: number
+          hours_allocated: number
+          id: number
+          Quote_Name: string
+          resource_skill_id: number
+          service_category_level_1_id: number | null
+          service_category_level_2_id: number | null
+          service_category_level_3_id: number | null
+        }
+        Insert: {
+          cost_category_id?: number | null
+          created_at?: string | null
+          Deal_Id: string
+          effort_month: number
+          effort_year: number
+          experience_years: number
+          hours_allocated: number
+          id?: number
+          Quote_Name: string
+          resource_skill_id: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Update: {
+          cost_category_id?: number | null
+          created_at?: string | null
+          Deal_Id?: string
+          effort_month?: number
+          effort_year?: number
+          experience_years?: number
+          hours_allocated?: number
+          id?: number
+          Quote_Name?: string
+          resource_skill_id?: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "QuoteResourceEffort_cost_category_id_fkey"
+            columns: ["cost_category_id"]
+            isOneToOne: false
+            referencedRelation: "CostCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_Deal_Id_Quote_Name_fkey"
+            columns: ["Deal_Id", "Quote_Name"]
+            isOneToOne: false
+            referencedRelation: "Quotes"
+            referencedColumns: ["Deal_Id", "Quote_Name"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_resource_skill_id_fkey"
+            columns: ["resource_skill_id"]
+            isOneToOne: false
+            referencedRelation: "ResourceSkill"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_service_category_level_1_id_fkey"
+            columns: ["service_category_level_1_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_service_category_level_2_id_fkey"
+            columns: ["service_category_level_2_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteResourceEffort_service_category_level_3_id_fkey"
+            columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       QuoteResourceType: {
         Row: {
           created_at: string | null
@@ -155,6 +353,113 @@ export type Database = {
             columns: ["resource_type_id"]
             isOneToOne: false
             referencedRelation: "ResourceType"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      QuoteRevenue: {
+        Row: {
+          benchmark_rate_usd_per_hour: number | null
+          cb_cost_usd_per_hour: number | null
+          cost_category_id: number | null
+          created_at: string | null
+          Deal_Id: string
+          experience_years: number
+          geography_id: number | null
+          id: number
+          is_benchmark_rate_overridden: boolean | null
+          is_cb_cost_overridden: boolean | null
+          margin_percent: number | null
+          Quote_Name: string
+          resource_skill_id: number
+          service_category_level_1_id: number | null
+          service_category_level_2_id: number | null
+          service_category_level_3_id: number | null
+        }
+        Insert: {
+          benchmark_rate_usd_per_hour?: number | null
+          cb_cost_usd_per_hour?: number | null
+          cost_category_id?: number | null
+          created_at?: string | null
+          Deal_Id: string
+          experience_years: number
+          geography_id?: number | null
+          id?: number
+          is_benchmark_rate_overridden?: boolean | null
+          is_cb_cost_overridden?: boolean | null
+          margin_percent?: number | null
+          Quote_Name: string
+          resource_skill_id: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Update: {
+          benchmark_rate_usd_per_hour?: number | null
+          cb_cost_usd_per_hour?: number | null
+          cost_category_id?: number | null
+          created_at?: string | null
+          Deal_Id?: string
+          experience_years?: number
+          geography_id?: number | null
+          id?: number
+          is_benchmark_rate_overridden?: boolean | null
+          is_cb_cost_overridden?: boolean | null
+          margin_percent?: number | null
+          Quote_Name?: string
+          resource_skill_id?: number
+          service_category_level_1_id?: number | null
+          service_category_level_2_id?: number | null
+          service_category_level_3_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "QuoteRevenue_cost_category_id_fkey"
+            columns: ["cost_category_id"]
+            isOneToOne: false
+            referencedRelation: "CostCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_Deal_Id_Quote_Name_fkey"
+            columns: ["Deal_Id", "Quote_Name"]
+            isOneToOne: false
+            referencedRelation: "Quotes"
+            referencedColumns: ["Deal_Id", "Quote_Name"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_geography_id_fkey"
+            columns: ["geography_id"]
+            isOneToOne: false
+            referencedRelation: "Geography"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_resource_skill_id_fkey"
+            columns: ["resource_skill_id"]
+            isOneToOne: false
+            referencedRelation: "ResourceSkill"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_service_category_level_1_id_fkey"
+            columns: ["service_category_level_1_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_service_category_level_2_id_fkey"
+            columns: ["service_category_level_2_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "QuoteRevenue_service_category_level_3_id_fkey"
+            columns: ["service_category_level_3_id"]
+            isOneToOne: false
+            referencedRelation: "ServiceCategory"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +612,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ResourceSkill: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
       }
       ResourceType: {
         Row: {
