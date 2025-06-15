@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useDealMasterData } from './DealMaster/hooks/useDealMasterData';
 import { useDealMasterSave } from './DealMaster/hooks/useDealMasterSave';
@@ -26,6 +25,16 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     loadQuoteData
   } = useDealMasterData(dealId, quoteName);
 
+  console.log('DealMaster - Loaded data:', {
+    loadedQuoteData,
+    loadedResourceTypes,
+    loadedGeographies,
+    loadedCategories,
+    loadedVolumeDiscounts,
+    masterDataLoaded,
+    loading
+  });
+
   const {
     quoteData,
     setQuoteData,
@@ -50,6 +59,14 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     loadedCategories,
     loadedVolumeDiscounts
   );
+
+  console.log('DealMaster - Current state data:', {
+    quoteData,
+    selectedResourceTypes,
+    selectedGeographies,
+    selectedCategories,
+    volumeDiscounts
+  });
 
   const {
     handleDateChange,

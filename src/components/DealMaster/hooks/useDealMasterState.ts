@@ -6,10 +6,10 @@ import { QuoteData, VolumeDiscountRange, SelectedCategories } from '../types';
 export const useDealMasterState = (
   dealId: string, 
   quoteName: string,
-  loadedQuoteData?: QuoteData,
+  loadedQuoteData?: QuoteData | null,
   loadedSelectedResourceTypes?: number[],
   loadedSelectedGeographies?: number[],
-  loadedSelectedCategories?: SelectedCategories,
+  loadedSelectedCategories?: SelectedCategories | null,
   loadedVolumeDiscounts?: VolumeDiscountRange[]
 ) => {
   const [quoteData, setQuoteData] = useState<QuoteData>({
@@ -40,40 +40,37 @@ export const useDealMasterState = (
   const [geographyTableData, setGeographyTableData] = useState<any[]>([]);
   const [categoryTableData, setCategoryTableData] = useState<any[]>([]);
 
-  // Update state when loaded data changes - with proper state update
+  // Update state when loaded data changes
   useEffect(() => {
     if (loadedQuoteData) {
       console.log('useDealMasterState - Updating quote data with loaded data:', loadedQuoteData);
-      setQuoteData(prevData => ({
-        ...prevData,
-        ...loadedQuoteData
-      }));
+      setQuoteData(loadedQuoteData);
     }
   }, [loadedQuoteData]);
 
   useEffect(() => {
-    if (loadedSelectedResourceTypes && loadedSelectedResourceTypes.length > 0) {
+    if (loadedSelectedResourceTypes) {
       console.log('useDealMasterState - Updating resource types:', loadedSelectedResourceTypes);
       setSelectedResourceTypes(loadedSelectedResourceTypes);
     }
   }, [loadedSelectedResourceTypes]);
 
   useEffect(() => {
-    if (loadedSelectedGeographies && loadedSelectedGeographies.length > 0) {
+    if (loadedSelectedGeographies) {
       console.log('useDealMasterState - Updating geographies:', loadedSelectedGeographies);
       setSelectedGeographies(loadedSelectedGeographies);
     }
   }, [loadedSelectedGeographies]);
 
   useEffect(() => {
-    if (loadedSelectedCategories && (loadedSelectedCategories.level1 || loadedSelectedCategories.level2 || loadedSelectedCategories.level3)) {
+    if (loadedSelectedCategories) {
       console.log('useDealMasterState - Updating categories:', loadedSelectedCategories);
       setSelectedCategories(loadedSelectedCategories);
     }
   }, [loadedSelectedCategories]);
 
   useEffect(() => {
-    if (loadedVolumeDiscounts && loadedVolumeDiscounts.length > 0) {
+    if (loadedVolumeDiscounts) {
       console.log('useDealMasterState - Updating volume discounts:', loadedVolumeDiscounts);
       setVolumeDiscounts(loadedVolumeDiscounts);
     }
