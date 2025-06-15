@@ -23,6 +23,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
   const [selectedCategories, setSelectedCategories] = useState<SelectedCategories | null>(null);
   const [volumeDiscounts, setVolumeDiscounts] = useState<VolumeDiscountRange[]>([]);
   const [loading, setLoading] = useState(true);
+  const [masterDataLoaded, setMasterDataLoaded] = useState(false);
 
   const { toast } = useToast();
 
@@ -49,6 +50,8 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
       const { data: categoriesData } = await supabase.from('ServiceCategory').select('*').order('level, name');
       setServiceCategories(categoriesData || []);
       console.log('useDealMasterData - Loaded service categories:', categoriesData?.length);
+      
+      setMasterDataLoaded(true);
     } catch (error) {
       console.error('Error loading master data:', error);
       toast({
@@ -61,7 +64,6 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
 
   const loadQuoteData = async () => {
     try {
-      setLoading(true);
       console.log('useDealMasterData - Loading quote data for:', { dealId, quoteName });
       
       // Load quote data
@@ -177,6 +179,7 @@ export const useDealMasterData = (dealId: string, quoteName: string) => {
     selectedCategories,
     volumeDiscounts,
     loading,
+    masterDataLoaded,
     loadMasterData,
     loadQuoteData,
   };

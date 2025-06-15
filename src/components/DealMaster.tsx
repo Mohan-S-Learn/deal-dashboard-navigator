@@ -21,6 +21,7 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     selectedCategories: loadedCategories,
     volumeDiscounts: loadedVolumeDiscounts,
     loading,
+    masterDataLoaded,
     loadMasterData,
     loadQuoteData
   } = useDealMasterData(dealId, quoteName);
@@ -74,8 +75,13 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
   useEffect(() => {
     console.log('DealMaster - Loading data for:', { dealId, quoteName });
     loadMasterData();
-    loadQuoteData();
   }, [dealId, quoteName]);
+
+  useEffect(() => {
+    if (masterDataLoaded) {
+      loadQuoteData();
+    }
+  }, [masterDataLoaded, dealId, quoteName]);
 
   const handleSaveData = () => {
     console.log('=== SAVE DATA DEBUG ===');
@@ -93,7 +99,14 @@ const DealMaster: React.FC<DealMasterProps> = ({ dealId, quoteName, onBack }) =>
     );
   };
 
-  if (loading) {
+  // Show loading until both master data and quote data are loaded
+  if (loading || !masterDataLoaded) {
+    return <DealMasterLoadingState />;
+  }
+
+  // Ensure all required data arrays are properly initialized before rendering
+  if (!Array.isArray(markets) || !Array.isArray(resourceTypes) || !Array.isArray(geographies) || !Array.isArray(serviceCategories)) {
+    console.error('DealMaster - Data arrays not properly initialized:', { markets, resourceTypes, geographies, serviceCategories });
     return <DealMasterLoadingState />;
   }
 
