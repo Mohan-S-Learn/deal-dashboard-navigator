@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Copy, AlertTriangle } from 'lucide-react';
-import { ServiceCategory, SelectedCategories } from '../types';
+import { ServiceCategory } from '../types';
 import { AddRowsDialog } from './AddRowsDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ServiceCategoriesTableSectionProps {
   serviceCategories: ServiceCategory[];
-  selectedCategories: SelectedCategories;
-  onCategoryChange: (level: keyof SelectedCategories, value: number | null) => void;
+  selectedCategories: any;
+  onCategoryChange: (level: any, value: number | null) => void;
   onDataChange: (data: any[]) => void;
 }
 
@@ -79,15 +79,12 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
     loadExistingData();
   }, [isInitialized]);
 
-  // Pass data back to parent whenever it changes
+  // Send data to parent whenever it changes
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    // Send the category rows directly - save function expects this format
-    console.log('=== SERVICE CATEGORY DATA CHANGE ===');
+    console.log('ServiceCategories - Data change detected');
     console.log('ServiceCategories - sending data to parent:', categoryRows);
     onDataChange(categoryRows);
-  }, [categoryRows, onDataChange, isInitialized]);
+  }, [categoryRows, onDataChange]);
 
   const getFilteredCategories = (level: number, parentId?: number | null) => {
     return serviceCategories.filter(cat => 
@@ -97,13 +94,12 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   };
 
   const updateCategoryRow = (id: string, level: keyof Omit<ServiceCategoryRowData, 'id'>, value: string) => {
-    console.log(`=== SERVICE CATEGORY ROW UPDATE ===`);
-    console.log(`ServiceCategories - updating row ${id}, level ${level}, value:`, value);
+    console.log(`ServiceCategories - Updating row ${id}, level ${level}, value:`, value);
     
-    const numValue = value ? parseInt(value, 10) : null;
+    const numValue = value && value !== '' ? parseInt(value, 10) : null;
     
     setCategoryRows(prev => {
-      return prev.map(row => {
+      const newRows = prev.map(row => {
         if (row.id === id) {
           const updatedRow = { ...row, [level]: numValue };
           
@@ -115,11 +111,14 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
             updatedRow.level3 = null;
           }
           
-          console.log(`ServiceCategories - updated row result:`, updatedRow);
+          console.log(`ServiceCategories - Updated row result:`, updatedRow);
           return updatedRow;
         }
         return row;
       });
+      
+      console.log('ServiceCategories - All rows after update:', newRows);
+      return newRows;
     });
   };
 
@@ -130,13 +129,13 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
       level2: null,
       level3: null
     }));
-    console.log('ServiceCategories - adding new rows:', newRows);
+    console.log('ServiceCategories - Adding new rows:', newRows);
     setCategoryRows(prev => [...prev, ...newRows]);
   };
 
   const removeRow = (id: string) => {
     if (categoryRows.length > 1) {
-      console.log('ServiceCategories - removing row:', id);
+      console.log('ServiceCategories - Removing row:', id);
       setCategoryRows(prev => prev.filter(row => row.id !== id));
     }
   };
@@ -144,7 +143,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
   const copyFirstRowToAll = () => {
     if (categoryRows.length > 0) {
       const firstRow = categoryRows[0];
-      console.log('ServiceCategories - copying first row to all:', firstRow);
+      console.log('ServiceCategories - Copying first row to all:', firstRow);
       setCategoryRows(prev => prev.map((row, index) => 
         index === 0 ? row : {
           ...row,
@@ -210,15 +209,12 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
             </TableRow>
           </TableHeader>
           <TableBody>
-            {categoryRows.map((row, index) => (
+            {categoryRows.map((row) => (
               <TableRow key={row.id} className={isDuplicate(row) ? 'bg-red-50' : ''}>
                 <TableCell>
                   <Select 
                     value={row.level1?.toString() || ''} 
-                    onValueChange={(value) => {
-                      console.log(`ServiceCategories - Select level1 changed for row ${row.id}:`, value);
-                      updateCategoryRow(row.id, 'level1', value);
-                    }}
+                    onValueChange={(value) => updateCategoryRow(row.id, 'level1', value)}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select service category" />
@@ -233,10 +229,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                 <TableCell>
                   <Select 
                     value={row.level2?.toString() || ''} 
-                    onValueChange={(value) => {
-                      console.log(`ServiceCategories - Select level2 changed for row ${row.id}:`, value);
-                      updateCategoryRow(row.id, 'level2', value);
-                    }}
+                    onValueChange={(value) => updateCategoryRow(row.id, 'level2', value)}
                     disabled={!row.level1}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
@@ -252,10 +245,7 @@ export const ServiceCategoriesTableSection: React.FC<ServiceCategoriesTableSecti
                 <TableCell>
                   <Select 
                     value={row.level3?.toString() || ''} 
-                    onValueChange={(value) => {
-                      console.log(`ServiceCategories - Select level3 changed for row ${row.id}:`, value);
-                      updateCategoryRow(row.id, 'level3', value);
-                    }}
+                    onValueChange={(value) => updateCategoryRow(row.id, 'level3', value)}
                     disabled={!row.level2}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>

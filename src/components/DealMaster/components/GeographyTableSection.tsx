@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Copy, AlertTriangle } from 'lucide-react';
-import { Geography, SelectedGeographyRow } from '../types';
+import { Geography } from '../types';
 import { AddRowsDialog } from './AddRowsDialog';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,7 +13,7 @@ interface GeographyTableSectionProps {
   geographies: Geography[];
   selectedGeographies: number[];
   onGeographyChange: (geographyId: number, checked: boolean) => void;
-  onDataChange: (data: any[]) => void;
+  onDataChange: (data: number[]) => void;
 }
 
 interface GeographyRowData {
@@ -92,21 +92,18 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
     loadExistingData();
   }, [isInitialized]);
 
-  // Pass data back to parent whenever it changes
+  // Send data to parent whenever it changes
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    // Convert to the format expected by save function: array of geography IDs
     const validGeographyIds = selectedRows
-      .filter(row => row.geographyId !== null)
-      .map(row => row.geographyId);
+      .filter(row => row.geographyId !== null && row.geographyId !== undefined)
+      .map(row => row.geographyId as number);
     
-    console.log('=== GEOGRAPHY DATA CHANGE ===');
+    console.log('Geography - Data change detected');
     console.log('Geography - selectedRows:', selectedRows);
     console.log('Geography - sending geography IDs to parent:', validGeographyIds);
     
     onDataChange(validGeographyIds);
-  }, [selectedRows, onDataChange, isInitialized]);
+  }, [selectedRows, onDataChange]);
 
   // Group geographies by region and country
   const groupedGeographies = useMemo(() => {
@@ -138,28 +135,12 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   };
 
   const updateRow = (id: string, field: keyof GeographyRowData, value: string | number) => {
-    console.log(`=== GEOGRAPHY ROW UPDATE ===`);
-    console.log(`Geography - updating row ${id}, field ${field}, value:`, value);
+    console.log(`Geography - Updating row ${id}, field ${field}, value:`, value);
     
     setSelectedRows(prev => {
-      return prev.map(row => {
+      const newRows = prev.map(row => {
         if (row.id === id) {
-          if (field === 'geographyId') {
-            // When selecting a specific geography, update all fields
-            const selectedGeo = geographies.find(g => g.id === value);
-            if (selectedGeo) {
-              const updatedRow = {
-                ...row,
-                geographyId: selectedGeo.id,
-                region: selectedGeo.region,
-                country: selectedGeo.country,
-                city: selectedGeo.city
-              };
-              console.log(`Geography - updated row with geography:`, updatedRow);
-              return updatedRow;
-            }
-          } else if (field === 'region') {
-            // Reset dependent fields when region changes
+          if (field === 'region') {
             const updatedRow = {
               ...row,
               region: value as string,
@@ -167,20 +148,18 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
               city: '',
               geographyId: null
             };
-            console.log(`Geography - updated row with region:`, updatedRow);
+            console.log('Geography - Updated row with region:', updatedRow);
             return updatedRow;
           } else if (field === 'country') {
-            // Reset city when country changes
             const updatedRow = {
               ...row,
               country: value as string,
               city: '',
               geographyId: null
             };
-            console.log(`Geography - updated row with country:`, updatedRow);
+            console.log('Geography - Updated row with country:', updatedRow);
             return updatedRow;
           } else if (field === 'city') {
-            // Find the matching geography when city is selected
             const matchingGeo = geographies.find(g => 
               g.region === row.region && 
               g.country === row.country && 
@@ -191,12 +170,16 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
               city: value as string,
               geographyId: matchingGeo ? matchingGeo.id : null
             };
-            console.log(`Geography - updated row with city:`, updatedRow);
+            console.log('Geography - Updated row with city:', updatedRow);
+            console.log('Geography - Matching geography found:', matchingGeo);
             return updatedRow;
           }
         }
         return row;
       });
+      
+      console.log('Geography - All rows after update:', newRows);
+      return newRows;
     });
   };
 
@@ -208,13 +191,13 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
       country: '',
       city: ''
     }));
-    console.log('Geography - adding new rows:', newRows);
+    console.log('Geography - Adding new rows:', newRows);
     setSelectedRows(prev => [...prev, ...newRows]);
   };
 
   const removeRow = (id: string) => {
     if (selectedRows.length > 1) {
-      console.log('Geography - removing row:', id);
+      console.log('Geography - Removing row:', id);
       setSelectedRows(prev => prev.filter(row => row.id !== id));
     }
   };
@@ -222,7 +205,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
   const copyFirstRowToAll = () => {
     if (selectedRows.length > 0) {
       const firstRow = selectedRows[0];
-      console.log('Geography - copying first row to all:', firstRow);
+      console.log('Geography - Copying first row to all:', firstRow);
       setSelectedRows(prev => prev.map((row, index) => 
         index === 0 ? row : {
           ...row,
@@ -287,15 +270,12 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {selectedRows.map((row, index) => (
+            {selectedRows.map((row) => (
               <TableRow key={row.id} className={isDuplicate(row) ? 'bg-red-50' : ''}>
                 <TableCell>
                   <Select 
                     value={row.region || ''} 
-                    onValueChange={(value) => {
-                      console.log(`Geography - Select region changed for row ${row.id}:`, value);
-                      updateRow(row.id, 'region', value);
-                    }}
+                    onValueChange={(value) => updateRow(row.id, 'region', value)}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select region" />
@@ -312,10 +292,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 <TableCell>
                   <Select 
                     value={row.country || ''} 
-                    onValueChange={(value) => {
-                      console.log(`Geography - Select country changed for row ${row.id}:`, value);
-                      updateRow(row.id, 'country', value);
-                    }}
+                    onValueChange={(value) => updateRow(row.id, 'country', value)}
                     disabled={!row.region}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>
@@ -333,10 +310,7 @@ export const GeographyTableSection: React.FC<GeographyTableSectionProps> = ({
                 <TableCell>
                   <Select 
                     value={row.city || ''} 
-                    onValueChange={(value) => {
-                      console.log(`Geography - Select city changed for row ${row.id}:`, value);
-                      updateRow(row.id, 'city', value);
-                    }}
+                    onValueChange={(value) => updateRow(row.id, 'city', value)}
                     disabled={!row.country}
                   >
                     <SelectTrigger className={`w-full ${isDuplicate(row) ? 'border-red-500' : ''}`}>

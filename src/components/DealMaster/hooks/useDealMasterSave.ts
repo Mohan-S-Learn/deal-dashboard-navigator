@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { QuoteData, SelectedCategories, VolumeDiscountRange } from '../types';
+import { QuoteData, VolumeDiscountRange } from '../types';
 
 export const useDealMasterSave = () => {
   const { toast } = useToast();
@@ -128,7 +128,7 @@ export const useDealMasterSave = () => {
         console.log('Resource types saved successfully');
       }
 
-      // Process Geography Data - now expects array of geography IDs
+      // Process Geography Data - expects array of geography IDs
       console.log('=== PROCESSING GEOGRAPHY DATA ===');
       console.log('Geography data type:', typeof geographyTableData);
       console.log('Geography data content:', geographyTableData);
@@ -137,14 +137,14 @@ export const useDealMasterSave = () => {
       await supabase.from('QuoteGeography').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing geography records');
 
-      // Check if geographyTableData is an array of geography IDs
+      // Process geography data as array of geography IDs
       if (Array.isArray(geographyTableData) && geographyTableData.length > 0) {
         // Filter out null/invalid geography IDs
         const validGeographyIds = geographyTableData.filter(id => 
-          id !== null && id !== undefined && !isNaN(Number(id))
+          id !== null && id !== undefined && !isNaN(Number(id)) && Number(id) > 0
         ).map(id => Number(id));
 
-        console.log('Valid geography IDs:', validGeographyIds);
+        console.log('Valid geography IDs for saving:', validGeographyIds);
 
         if (validGeographyIds.length > 0) {
           const geographyInserts = validGeographyIds.map(geoId => ({
@@ -176,18 +176,19 @@ export const useDealMasterSave = () => {
       await supabase.from('QuoteServiceCategory').delete().eq('Deal_Id', dealId).eq('Quote_Name', quoteName);
       console.log('Deleted existing category records');
 
-      // Validate and process category data
+      // Process category data as array of category row objects
       if (Array.isArray(categoryTableData) && categoryTableData.length > 0) {
         const validCategoryRows = categoryTableData.filter(row => {
           const hasValidLevel1 = row && 
             row.level1 !== null && 
             row.level1 !== undefined && 
-            !isNaN(Number(row.level1));
+            !isNaN(Number(row.level1)) &&
+            Number(row.level1) > 0;
           console.log('Category row validation:', row, 'hasValidLevel1:', hasValidLevel1);
           return hasValidLevel1;
         });
 
-        console.log('Valid category rows:', validCategoryRows);
+        console.log('Valid category rows for saving:', validCategoryRows);
 
         if (validCategoryRows.length > 0) {
           const categoryInserts = validCategoryRows.map((row, index) => {
@@ -195,8 +196,8 @@ export const useDealMasterSave = () => {
               Deal_Id: dealId,
               Quote_Name: quoteName,
               category_level_1_id: Number(row.level1),
-              category_level_2_id: row.level2 && !isNaN(Number(row.level2)) ? Number(row.level2) : null,
-              category_level_3_id: row.level3 && !isNaN(Number(row.level3)) ? Number(row.level3) : null,
+              category_level_2_id: row.level2 && !isNaN(Number(row.level2)) && Number(row.level2) > 0 ? Number(row.level2) : null,
+              category_level_3_id: row.level3 && !isNaN(Number(row.level3)) && Number(row.level3) > 0 ? Number(row.level3) : null,
             };
             console.log(`Category insert for row ${index}:`, insert);
             return insert;
