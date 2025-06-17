@@ -77,7 +77,7 @@ export const useGeographyTableData = (
             onDataChange(validGeographyIds);
           } else {
             console.log('Geography - No existing data found, using default empty row');
-            // Still notify parent with empty array
+            // Still notify parent with empty array for new quotes
             onDataChange([]);
           }
         }
@@ -102,6 +102,7 @@ export const useGeographyTableData = (
     console.log('Geography - selectedRows changed, sending to parent:', validGeographyIds);
     console.log('Geography - Current selectedRows:', selectedRows);
     
+    // Always notify parent, even with empty array
     onDataChange(validGeographyIds);
   }, [selectedRows, onDataChange, isInitialized]);
 

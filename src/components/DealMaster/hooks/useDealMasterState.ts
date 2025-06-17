@@ -69,7 +69,8 @@ export const useDealMasterState = (
     return initial;
   });
 
-  const [geographyTableData, setGeographyTableData] = useState<any[]>([]);
+  // Initialize geography and category table data as empty arrays
+  const [geographyTableData, setGeographyTableData] = useState<number[]>([]);
   const [categoryTableData, setCategoryTableData] = useState<any[]>([]);
 
   // Update state when loaded data changes
@@ -129,6 +130,15 @@ export const useDealMasterState = (
     }
   }, [quoteData.knowledge_transition_start_date, quoteData.steady_state_end_date, quoteData.overall_duration_months]);
 
+  // Enhanced geography table data logging
+  useEffect(() => {
+    console.log('=== GEOGRAPHY TABLE DATA UPDATE ===');
+    console.log('Geography table data changed to:', geographyTableData);
+    console.log('Type:', typeof geographyTableData);
+    console.log('Is array:', Array.isArray(geographyTableData));
+    console.log('Length:', geographyTableData?.length);
+  }, [geographyTableData]);
+
   // Debug current state
   useEffect(() => {
     console.log('=== CURRENT STATE DEBUG ===');
@@ -137,7 +147,9 @@ export const useDealMasterState = (
     console.log('Current selected geographies:', selectedGeographies);
     console.log('Current selected categories:', selectedCategories);
     console.log('Current volume discounts:', volumeDiscounts);
-  }, [quoteData, selectedResourceTypes, selectedGeographies, selectedCategories, volumeDiscounts]);
+    console.log('Current geography table data:', geographyTableData);
+    console.log('Current category table data:', categoryTableData);
+  }, [quoteData, selectedResourceTypes, selectedGeographies, selectedCategories, volumeDiscounts, geographyTableData, categoryTableData]);
 
   return {
     quoteData,
