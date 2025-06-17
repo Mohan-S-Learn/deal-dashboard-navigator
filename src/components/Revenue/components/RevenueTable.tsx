@@ -48,6 +48,29 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
     onUpdate(id, { [field]: value });
   };
 
+  // Calculate derived values
+  const calculateTotalCost = (item: QuoteRevenue) => {
+    // For now, total cost = C&B cost (we can add other cost components later)
+    return item.cb_cost_usd_per_hour || 0;
+  };
+
+  const calculateRevenue = (item: QuoteRevenue) => {
+    return item.benchmark_rate_usd_per_hour || 0;
+  };
+
+  const calculateMarginAmount = (item: QuoteRevenue) => {
+    const revenue = calculateRevenue(item);
+    const cost = calculateTotalCost(item);
+    return revenue - cost;
+  };
+
+  const calculateActualMarginPercent = (item: QuoteRevenue) => {
+    const revenue = calculateRevenue(item);
+    if (revenue === 0) return 0;
+    const marginAmount = calculateMarginAmount(item);
+    return (marginAmount / revenue) * 100;
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -62,6 +85,8 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
             <TableHead>Geography</TableHead>
             <TableHead>Benchmark Rate ($/hr)</TableHead>
             <TableHead>C&B Cost ($/hr)</TableHead>
+            <TableHead>Total Cost ($/hr)</TableHead>
+            <TableHead>Margin Amount ($/hr)</TableHead>
             <TableHead>Margin %</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -82,7 +107,7 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
                   step="0.01"
                   value={item.benchmark_rate_usd_per_hour || ''}
                   onChange={(e) => handleFieldUpdate(item.id!, 'benchmark_rate_usd_per_hour', parseFloat(e.target.value) || 0)}
-                  className="w-20"
+                  className="w-24"
                 />
               </TableCell>
               <TableCell>
@@ -91,17 +116,17 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
                   step="0.01"
                   value={item.cb_cost_usd_per_hour || ''}
                   onChange={(e) => handleFieldUpdate(item.id!, 'cb_cost_usd_per_hour', parseFloat(e.target.value) || 0)}
-                  className="w-20"
+                  className="w-24"
                 />
               </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={item.margin_percent || ''}
-                  onChange={(e) => handleFieldUpdate(item.id!, 'margin_percent', parseFloat(e.target.value) || 0)}
-                  className="w-20"
-                />
+              <TableCell className="font-medium">
+                ${calculateTotalCost(item).toFixed(2)}
+              </TableCell>
+              <TableCell className="font-medium">
+                ${calculateMarginAmount(item).toFixed(2)}
+              </TableCell>
+              <TableCell className="font-medium">
+                {calculateActualMarginPercent(item).toFixed(1)}%
               </TableCell>
               <TableCell>
                 <div className="flex space-x-2">
@@ -118,7 +143,7 @@ export const RevenueTable: React.FC<RevenueTableProps> = ({
           ))}
           {data.length === 0 && (
             <TableRow>
-              <TableCell colSpan={11} className="text-center text-gray-500">
+              <TableCell colSpan={13} className="text-center text-gray-500">
                 No revenue items found. Click "Add Revenue Item" to get started.
               </TableCell>
             </TableRow>

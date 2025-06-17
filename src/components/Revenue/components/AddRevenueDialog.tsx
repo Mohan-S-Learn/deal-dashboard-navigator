@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -179,10 +180,13 @@ export const AddRevenueDialog: React.FC<AddRevenueDialogProps> = ({
   };
 
   const getResourceSkills = () => {
-    return serviceCategories.filter(cat => 
+    console.log('Getting resource skills for parent ID:', formData.service_category_level_3_id);
+    const skills = serviceCategories.filter(cat => 
       cat.level === 4 && 
       cat.parent_id === formData.service_category_level_3_id
     );
+    console.log('Found resource skills:', skills);
+    return skills;
   };
 
   const getAvailableGeographies = () => {
