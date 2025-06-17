@@ -56,13 +56,15 @@ export const useGeographyTableData = (
             
             const loadedRows = existingGeographies.map((item, index) => {
               const geo = item.Geography as any;
-              return {
+              const row = {
                 id: (index + 1).toString(),
                 geographyId: item.geography_id,
                 region: geo?.region || '',
                 country: geo?.country || '',
                 city: geo?.city || ''
               };
+              console.log('Geography - Creating loaded row:', row);
+              return row;
             });
             
             console.log('Geography - Setting loaded rows:', loadedRows);
@@ -73,7 +75,7 @@ export const useGeographyTableData = (
               .filter(row => row.geographyId !== null && row.geographyId !== undefined)
               .map(row => row.geographyId as number);
             
-            console.log('Geography - Notifying parent with loaded IDs:', validGeographyIds);
+            console.log('Geography - Immediately notifying parent with loaded IDs:', validGeographyIds);
             onDataChange(validGeographyIds);
           } else {
             console.log('Geography - No existing data found, using default empty row');
@@ -96,7 +98,11 @@ export const useGeographyTableData = (
     if (!isInitialized) return;
     
     const validGeographyIds = selectedRows
-      .filter(row => row.geographyId !== null && row.geographyId !== undefined)
+      .filter(row => {
+        const isValid = row.geographyId !== null && row.geographyId !== undefined;
+        console.log(`Geography - Row ${row.id} geography ID ${row.geographyId} is valid: ${isValid}`);
+        return isValid;
+      })
       .map(row => row.geographyId as number);
     
     console.log('Geography - selectedRows changed, sending to parent:', validGeographyIds);
@@ -132,6 +138,7 @@ export const useGeographyTableData = (
             console.log('Geography - Updated row with country:', updatedRow);
             return updatedRow;
           } else if (field === 'city') {
+            // Find the matching geography based on region, country, and city
             const matchingGeo = geographies.find(g => 
               g.region === row.region && 
               g.country === row.country && 
