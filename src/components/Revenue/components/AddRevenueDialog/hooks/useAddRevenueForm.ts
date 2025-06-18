@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CostCategory } from '../../types';
+import { CostCategory } from '../../../types';
 
 export interface AddRevenueFormData {
   service_category_level_1_id: number | null;

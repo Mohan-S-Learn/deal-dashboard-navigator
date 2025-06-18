@@ -2,7 +2,7 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ServiceCategory } from '../../../DealMaster/types';
+import { ServiceCategory } from '../../../../DealMaster/types';
 import { AddRevenueFormData } from '../hooks/useAddRevenueForm';
 
 interface ServiceCategorySelectorProps {
