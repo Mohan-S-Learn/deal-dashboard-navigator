@@ -2,8 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { mockDeals } from '../data/mockData';
 
-export const syncDealsToDatabase = async () => {
+export const syncDealsToDatabase = async (): Promise<boolean> => {
   try {
+    console.log('Starting sync deals to database...');
+    
     // Check if deals already exist
     const { data: existingDeals, error: checkError } = await supabase
       .from('Deals')
@@ -15,6 +17,7 @@ export const syncDealsToDatabase = async () => {
     }
 
     const existingDealIds = existingDeals?.map(deal => deal.Deal_Id) || [];
+    console.log('Existing deal IDs:', existingDealIds);
 
     // Filter out deals that already exist
     const dealsToInsert = mockDeals.filter(deal => !existingDealIds.includes(deal.id));
@@ -23,6 +26,8 @@ export const syncDealsToDatabase = async () => {
       console.log('All deals already exist in database');
       return true;
     }
+
+    console.log('Deals to insert:', dealsToInsert.length);
 
     // Insert new deals
     const dealsData = dealsToInsert.map(deal => ({
@@ -34,6 +39,8 @@ export const syncDealsToDatabase = async () => {
       'Margin%': deal.marginPercent,
       Created_Date: deal.createdDate
     }));
+
+    console.log('Inserting deals data:', dealsData);
 
     const { error: insertError } = await supabase
       .from('Deals')

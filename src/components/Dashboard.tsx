@@ -33,14 +33,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
       setLoading(true);
       
       // First try to load existing deals from database
-      await loadDealsFromDatabase();
+      const databaseDeals = await loadDealsFromDatabase();
       
-      // If no deals exist, sync mock deals to database
-      const existingDeals = await checkExistingDeals();
-      if (existingDeals.length === 0) {
+      // If no deals exist in database, try to sync mock deals
+      if (databaseDeals.length === 0) {
         console.log('No existing deals found, syncing mock data...');
-        await syncDealsToDatabase();
-        await loadDealsFromDatabase();
+        const syncSuccess = await syncDealsToDatabase();
+        
+        if (syncSuccess) {
+          // If sync succeeded, load from database again
+          await loadDealsFromDatabase();
+        } else {
+          // If sync failed, use mock data directly
+          console.log('Sync failed, using mock data as fallback');
+          setMockDeals();
+        }
       }
     } catch (error) {
       console.error('Error initializing data:', error);
@@ -48,25 +55,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
       setMockDeals();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkExistingDeals = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('Deals')
-        .select('Deal_Id')
-        .limit(1);
-
-      if (error) {
-        console.error('Error checking existing deals:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error checking existing deals:', error);
-      return [];
     }
   };
 
@@ -131,7 +119,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
     setDeals(mockDeals);
   };
 
-  const loadDealsFromDatabase = async () => {
+  const loadDealsFromDatabase = async (): Promise<Deal[]> => {
     try {
       console.log('Loading deals from database...');
       const { data, error } = await supabase
@@ -141,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
 
       if (error) {
         console.error('Error loading deals:', error);
-        return;
+        return [];
       }
 
       console.log('Raw deals data from database:', data);
@@ -158,8 +146,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
 
       console.log('Formatted deals:', formattedDeals);
       setDeals(formattedDeals);
+      return formattedDeals;
     } catch (error) {
       console.error('Error loading deals from database:', error);
+      return [];
     }
   };
 
