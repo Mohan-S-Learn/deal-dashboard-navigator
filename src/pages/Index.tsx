@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AuthProvider } from '../contexts/AuthContext';
 import Login from '../components/Login';
@@ -7,6 +6,7 @@ import VersionManagement from '../components/VersionManagement';
 import DealMaster from '../components/DealMaster';
 import Revenue from '../components/Revenue/Revenue';
 import ResourceEfforts from '../components/ResourceEfforts/ResourceEfforts';
+import DebugPanel from '../components/DebugPanel';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -30,11 +30,13 @@ const Index = () => {
   };
 
   const handleDealClick = (dealId: string) => {
+    console.log('Deal clicked:', dealId);
     setSelectedDealId(dealId);
     setCurrentView('version-management');
   };
 
   const handleQuoteClick = (dealId: string, quoteName: string) => {
+    console.log('Quote clicked:', dealId, quoteName);
     setSelectedDealId(dealId);
     setSelectedQuoteName(quoteName);
     setCurrentView('deal-master');
@@ -170,7 +172,14 @@ const Index = () => {
       case 'login':
         return <Login onLogin={handleLogin} />;
       case 'dashboard':
-        return <Dashboard onDealClick={handleDealClick} />;
+        return (
+          <>
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+              <DebugPanel />
+            </div>
+            <Dashboard onDealClick={handleDealClick} />
+          </>
+        );
       case 'version-management':
         return <VersionManagement dealId={selectedDealId} onBack={handleBackToDashboard} onQuoteClick={handleQuoteClick} />;
       case 'deal-master':

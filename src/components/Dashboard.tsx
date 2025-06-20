@@ -23,6 +23,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     initializeData();
@@ -31,34 +32,85 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
   const initializeData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Starting dashboard data initialization...');
       
-      // First try to load existing deals from database
+      // Step 1: Try to load existing deals from database
+      console.log('Step 1: Loading deals from database...');
       const databaseDeals = await loadDealsFromDatabase();
+      console.log('Database deals loaded:', databaseDeals.length);
       
-      // If no deals exist in database, try to sync mock deals
-      if (databaseDeals.length === 0) {
-        console.log('No existing deals found, syncing mock data...');
+      if (databaseDeals.length > 0) {
+        console.log('Found deals in database, using them');
+        setDeals(databaseDeals);
+      } else {
+        // Step 2: No deals in database, try to sync mock data
+        console.log('Step 2: No deals found, syncing mock data...');
         const syncSuccess = await syncDealsToDatabase();
+        console.log('Sync result:', syncSuccess);
         
         if (syncSuccess) {
-          // If sync succeeded, load from database again
-          await loadDealsFromDatabase();
+          // Step 3: Load from database after successful sync
+          console.log('Step 3: Sync successful, loading from database again...');
+          const newDeals = await loadDealsFromDatabase();
+          console.log('Deals after sync:', newDeals.length);
+          setDeals(newDeals);
         } else {
-          // If sync failed, use mock data directly
-          console.log('Sync failed, using mock data as fallback');
+          // Step 4: Fallback to mock data if sync failed
+          console.log('Step 4: Sync failed, using mock data fallback');
           setMockDeals();
         }
       }
     } catch (error) {
-      console.error('Error initializing data:', error);
-      // If everything fails, use mock data as fallback
+      console.error('Error in initializeData:', error);
+      setError(`Failed to load deals: ${error}`);
+      // Final fallback to mock data
       setMockDeals();
     } finally {
       setLoading(false);
     }
   };
 
+  const loadDealsFromDatabase = async (): Promise<Deal[]> => {
+    try {
+      console.log('Querying Deals table...');
+      const { data, error } = await supabase
+        .from('Deals')
+        .select('*')
+        .order('Created_Date', { ascending: false });
+
+      if (error) {
+        console.error('Supabase error loading deals:', error);
+        throw error;
+      }
+
+      console.log('Raw deals data from Supabase:', data);
+
+      if (!data || data.length === 0) {
+        console.log('No deals found in database');
+        return [];
+      }
+
+      const formattedDeals = data.map(deal => ({
+        id: deal.Deal_Id,
+        name: deal.Deal_Name,
+        dealOwner: deal.Deal_Owner,
+        status: deal.Status,
+        totalRevenue: deal.Total_Revenue,
+        marginPercent: deal['Margin%'],
+        createdDate: deal.Created_Date
+      }));
+
+      console.log('Formatted deals for UI:', formattedDeals);
+      return formattedDeals;
+    } catch (error) {
+      console.error('Error in loadDealsFromDatabase:', error);
+      throw error;
+    }
+  };
+
   const setMockDeals = () => {
+    console.log('Setting fallback mock deals...');
     const mockDeals: Deal[] = [
       {
         id: 'DEAL-001',
@@ -115,49 +167,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         createdDate: '2024-03-10'
       }
     ];
-    console.log('Setting mock deals:', mockDeals);
+    console.log('Mock deals set:', mockDeals.length);
     setDeals(mockDeals);
   };
 
-  const loadDealsFromDatabase = async (): Promise<Deal[]> => {
-    try {
-      console.log('Loading deals from database...');
-      const { data, error } = await supabase
-        .from('Deals')
-        .select('*')
-        .order('Created_Date', { ascending: false });
-
-      if (error) {
-        console.error('Error loading deals:', error);
-        return [];
-      }
-
-      console.log('Raw deals data from database:', data);
-
-      const formattedDeals = data.map(deal => ({
-        id: deal.Deal_Id,
-        name: deal.Deal_Name,
-        dealOwner: deal.Deal_Owner,
-        status: deal.Status,
-        totalRevenue: deal.Total_Revenue,
-        marginPercent: deal['Margin%'],
-        createdDate: deal.Created_Date
-      }));
-
-      console.log('Formatted deals:', formattedDeals);
-      setDeals(formattedDeals);
-      return formattedDeals;
-    } catch (error) {
-      console.error('Error loading deals from database:', error);
-      return [];
-    }
-  };
-
   const handleScenarioBuilderClick = () => {
-    console.log('Scenario Builder clicked, deals available:', deals.length);
+    console.log('Scenario Builder clicked');
+    console.log('Available deals:', deals.length);
     if (deals.length > 0) {
       console.log('Navigating to scenario builder with deal:', deals[0].id);
-      onDealClick(deals[0].id); // This should navigate to version management
+      onDealClick(deals[0].id);
+    } else {
+      console.error('No deals available for scenario builder');
     }
   };
 
@@ -169,6 +190,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading dashboard...</p>
+          {error && <p className="text-red-600 mt-2 text-sm">{error}</p>}
         </div>
       </div>
     );
@@ -185,6 +207,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         <StatisticsCards deals={deals} />
         <DealsGrid deals={deals} onDealClick={onDealClick} />
+        
+        {/* Debug info - remove in production */}
+        <div className="mt-8 p-4 bg-gray-100 rounded text-sm text-gray-600">
+          <p>Debug Info:</p>
+          <p>Deals loaded: {deals.length}</p>
+          <p>Total Revenue: ${totalRevenue.toLocaleString()}</p>
+          {error && <p className="text-red-600">Error: {error}</p>}
+        </div>
       </main>
     </div>
   );
