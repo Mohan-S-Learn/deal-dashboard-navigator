@@ -32,21 +32,41 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
     try {
       setLoading(true);
       
-      // Try to sync deals first, if it fails due to RLS, we'll create mock data
-      try {
+      // First try to load existing deals from database
+      await loadDealsFromDatabase();
+      
+      // If no deals exist, sync mock deals to database
+      const existingDeals = await checkExistingDeals();
+      if (existingDeals.length === 0) {
+        console.log('No existing deals found, syncing mock data...');
         await syncDealsToDatabase();
         await loadDealsFromDatabase();
-      } catch (syncError) {
-        console.error('Sync failed, using mock data:', syncError);
-        // If sync fails due to RLS, create some mock deals for demo purposes
-        setMockDeals();
       }
     } catch (error) {
       console.error('Error initializing data:', error);
-      // Fallback to mock data
+      // If everything fails, use mock data as fallback
       setMockDeals();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkExistingDeals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Deals')
+        .select('Deal_Id')
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking existing deals:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error checking existing deals:', error);
+      return [];
     }
   };
 
@@ -57,34 +77,63 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         name: 'Enterprise Cloud Migration',
         dealOwner: 'John Smith',
         status: 'Active',
-        totalRevenue: 250000,
-        marginPercent: 25,
+        totalRevenue: 450000,
+        marginPercent: 35.5,
         createdDate: '2024-01-15'
       },
       {
         id: 'DEAL-002',
-        name: 'Digital Transformation Initiative',
+        name: 'Digital Transformation Suite',
         dealOwner: 'Sarah Johnson',
-        status: 'In Progress',
-        totalRevenue: 180000,
-        marginPercent: 30,
-        createdDate: '2024-02-01'
+        status: 'Active',
+        totalRevenue: 780000,
+        marginPercent: 42.8,
+        createdDate: '2024-02-08'
       },
       {
         id: 'DEAL-003',
         name: 'Security Infrastructure Upgrade',
-        dealOwner: 'Mike Chen',
-        status: 'Proposal',
-        totalRevenue: 120000,
-        marginPercent: 22,
-        createdDate: '2024-02-10'
+        dealOwner: 'Mike Davis',
+        status: 'Pending',
+        totalRevenue: 320000,
+        marginPercent: 28.3,
+        createdDate: '2024-01-22'
+      },
+      {
+        id: 'DEAL-004',
+        name: 'Data Analytics Platform',
+        dealOwner: 'Lisa Chen',
+        status: 'Active',
+        totalRevenue: 950000,
+        marginPercent: 38.7,
+        createdDate: '2024-03-01'
+      },
+      {
+        id: 'DEAL-005',
+        name: 'Mobile App Development',
+        dealOwner: 'Tom Wilson',
+        status: 'Closed',
+        totalRevenue: 180000,
+        marginPercent: 45.2,
+        createdDate: '2024-02-14'
+      },
+      {
+        id: 'DEAL-006',
+        name: 'AI Implementation Services',
+        dealOwner: 'Emma Rodriguez',
+        status: 'Active',
+        totalRevenue: 1200000,
+        marginPercent: 52.1,
+        createdDate: '2024-03-10'
       }
     ];
+    console.log('Setting mock deals:', mockDeals);
     setDeals(mockDeals);
   };
 
   const loadDealsFromDatabase = async () => {
     try {
+      console.log('Loading deals from database...');
       const { data, error } = await supabase
         .from('Deals')
         .select('*')
@@ -94,6 +143,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         console.error('Error loading deals:', error);
         return;
       }
+
+      console.log('Raw deals data from database:', data);
 
       const formattedDeals = data.map(deal => ({
         id: deal.Deal_Id,
@@ -105,9 +156,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onDealClick }) => {
         createdDate: deal.Created_Date
       }));
 
+      console.log('Formatted deals:', formattedDeals);
       setDeals(formattedDeals);
     } catch (error) {
-      console.error('Error loading deals:', error);
+      console.error('Error loading deals from database:', error);
     }
   };
 
