@@ -134,10 +134,10 @@ export const DealParameterInput: React.FC<DealParameterInputProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small (< $100K)</SelectItem>
+                  <SelectItem value="small">Small (&lt; $100K)</SelectItem>
                   <SelectItem value="medium">Medium ($100K - $500K)</SelectItem>
                   <SelectItem value="large">Large ($500K - $1M)</SelectItem>
-                  <SelectItem value="enterprise">Enterprise (> $1M)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (&gt; $1M)</SelectItem>
                 </SelectContent>
               </Select>
             </motion.div>
