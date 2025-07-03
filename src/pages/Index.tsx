@@ -160,10 +160,23 @@ const Index = () => {
                         >
                           Resource Efforts
                         </Button>
-                      </NavigationMenuItem>
-                    </>
-                  )}
-                </NavigationMenuList>
+                       </NavigationMenuItem>
+                     </>
+                   )}
+                   <NavigationMenuItem>
+                     <Button
+                       variant={currentView === 'advanced-pricing' ? 'default' : 'ghost'}
+                       onClick={handleNavigateToAdvancedPricing}
+                       className={`font-semibold transition-all duration-200 ${
+                         currentView === 'advanced-pricing'
+                           ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg hover:shadow-xl'
+                           : 'hover:bg-gray-100'
+                       }`}
+                     >
+                       Advanced Pricing
+                     </Button>
+                   </NavigationMenuItem>
+                 </NavigationMenuList>
               </NavigationMenu>
             </div>
           </div>
@@ -193,6 +206,8 @@ const Index = () => {
         return <Revenue dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToDealMaster} />;
       case 'resource-efforts':
         return <ResourceEfforts dealId={selectedDealId} quoteName={selectedQuoteName} onBack={handleBackToDealMaster} />;
+      case 'advanced-pricing':
+        return <AdvancedPricingPortal onBack={handleBackToDashboard} />;
       default:
         return <Login onLogin={handleLogin} />;
     }
