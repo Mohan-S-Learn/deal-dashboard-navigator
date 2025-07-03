@@ -7,6 +7,7 @@ import DealMaster from '../components/DealMaster';
 import Revenue from '../components/Revenue/Revenue';
 import ResourceEfforts from '../components/ResourceEfforts/ResourceEfforts';
 import DebugPanel from '../components/DebugPanel';
+import { AdvancedPricingPortal } from './AdvancedPricingPortal';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -18,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Building2 } from 'lucide-react';
 
-type View = 'login' | 'dashboard' | 'version-management' | 'deal-master' | 'revenue' | 'resource-efforts';
+type View = 'login' | 'dashboard' | 'version-management' | 'deal-master' | 'revenue' | 'resource-efforts' | 'advanced-pricing';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<View>('login');
@@ -63,6 +64,10 @@ const Index = () => {
 
   const handleNavigateToResourceEfforts = () => {
     setCurrentView('resource-efforts');
+  };
+
+  const handleNavigateToAdvancedPricing = () => {
+    setCurrentView('advanced-pricing');
   };
 
   const renderNavigation = () => {
